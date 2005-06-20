@@ -70,15 +70,14 @@ class StreamVision(NSApplication):
                 growlNotify(cleanStreamTitle(iTunes.current_stream_title.get()),
                             cleanStreamName(iTunes.current_track.name.get()))
             else:
-		artwork = iTunes.current_track.artworks.data.get()
-		if artwork:
-		    artwork = artwork[0]
-		else:
-		    artwork = None
+                kw = {}
+                artwork = iTunes.current_track.artworks.get()
+                if artwork:
+                    kw['pictImage'] = artwork[0].data.get()
                 growlNotify(iTunes.current_track.name.get(),
                             iTunes.current_track.album.get() + "\n" +
                             iTunes.current_track.artist.get(),
-                            pictImage=artwork)
+                            **kw)
         else:
             trackName = ''
             if iTunes.current_track.class_.get() != k.Property:
