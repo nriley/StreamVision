@@ -42,7 +42,11 @@ def radioParadiseURL():
 def cleanStreamName(name):
     name = name.split('. ')[0]
     name = name.split(': ')[0]
-    name = ' - '.join(name.split(' - ')[:-1])
+    name = name.split(' - ')
+    if len(name) > 1:
+        name = ' - '.join(name[:-1])
+    else:
+        name = name[0]
     return name
     
 def cleanStreamTitle(title):
