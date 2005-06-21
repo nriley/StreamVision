@@ -109,16 +109,13 @@ class StreamVision(NSApplication):
         self.registerHotKey(lambda: iTunesApp().playpause(), 101) # F9
         self.registerHotKey(lambda: iTunesApp().previous_track(), 109) # F10
         self.registerHotKey(lambda: iTunesApp().next_track(), 103) # F11
+        NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
 
     def sendEvent_(self, theEvent):
         if theEvent.type() == NSSystemDefined and \
                theEvent.subtype() == kEventHotKeyPressedSubtype:
             self.hotKeyActions[theEvent.data1()]()
         super(StreamVision, self).sendEvent_(theEvent)
-        
-    def finishLaunching(self):
-        super(StreamVision, self).finishLaunching()
-        NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
 
 if __name__ == "__main__":
     AppHelper.runEventLoop()
