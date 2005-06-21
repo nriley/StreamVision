@@ -3,6 +3,7 @@
 
 from appscript import app, k
 from AppKit import NSApplication, NSBeep, NSSystemDefined, NSURL, NSWorkspace
+from Foundation import NSDistributedNotificationCenter
 from PyObjCTools import AppHelper
 from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
 from Carbon.Events import cmdKey
@@ -114,6 +115,10 @@ class StreamVision(NSApplication):
                theEvent.subtype() == kEventHotKeyPressedSubtype:
             self.hotKeyActions[theEvent.data1()]()
         super(StreamVision, self).sendEvent_(theEvent)
+        
+    def finishLaunching(self):
+        super(StreamVision, self).finishLaunching()
+        NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
 
 if __name__ == "__main__":
     AppHelper.runEventLoop()
