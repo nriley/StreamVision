@@ -40,7 +40,14 @@ def radioParadiseURL():
     session.go('http://www2.radioparadise.com/nowplay_3.php')
     return session.region.firsttag('a', class_='sky')['href']
 
-def cleanStreamName(name):
+def cleanStreamTitle(title):
+    if title == k.MissingValue:
+        return ''
+    title = title.split(' [')[0] # XXX move to description
+    title = title.replace('`', u'’')
+    return title
+    
+def cleanStreamTrackName(name):
     name = name.split('. ')[0]
     name = name.split(': ')[0]
     name = name.split(' - ')
@@ -49,12 +56,6 @@ def cleanStreamName(name):
     else:
         name = name[0]
     return name
-    
-def cleanStreamTitle(title):
-    if title == k.MissingValue:
-        return ''
-    title = title.replace('`', u'’')
-    return title
     
 def iTunesApp():
     return app(id='com.apple.iTunes')
@@ -69,7 +70,7 @@ class StreamVision(NSApplication):
         if iTunes.player_state.get() == k.playing:
             if iTunes.current_track.class_.get() == k.URL_track:
                 growlNotify(cleanStreamTitle(iTunes.current_stream_title.get()),
-                            cleanStreamName(iTunes.current_track.name.get()))
+                            cleanStreamTrackName(iTunes.current_track.name.get()))
             else:
                 kw = {}
                 artwork = iTunes.current_track.artworks.get()
