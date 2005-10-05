@@ -34,11 +34,11 @@ def growlNotify(title, description, **kw):
         description=description,
         application_name=GROWL_APP_NAME,
         **kw)
-        
+
 def radioParadiseURL():
     session = scrape.Session()
-    session.go('http://www2.radioparadise.com/nowplay_3.php')
-    return session.region.firsttag('a', class_='sky')['href']
+    session.go('http://www2.radioparadise.com/nowplay_b.php')
+    return session.region.firsttag('a')['href']
 
 def cleanStreamTitle(title):
     if title == k.MissingValue:
@@ -46,7 +46,7 @@ def cleanStreamTitle(title):
     title = title.split(' [')[0] # XXX move to description
     title = title.replace('`', u'’')
     return title
-    
+
 def cleanStreamTrackName(name):
     name = name.split('. ')[0]
     name = name.split(': ')[0]
@@ -56,7 +56,7 @@ def cleanStreamTrackName(name):
     else:
         name = name[0]
     return name
-    
+
 def iTunesApp():
     return app(id='com.apple.iTunes')
 
@@ -85,7 +85,7 @@ class StreamVision(NSApplication):
             if iTunes.current_track.class_.get() != k.Property:
                 trackName = iTunes.current_track.name.get()
             growlNotify("iTunes is not playing.", trackName)
-    
+
     def goToSite(self):
         iTunes = iTunesApp()
         if iTunes.player_state.get() == k.playing:
@@ -96,7 +96,7 @@ class StreamVision(NSApplication):
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
                 return
         NSBeep()
-    
+
     def registerHotKey(self, func, keyCode, mods=0):
         hotKeyRef = RegisterEventHotKey(keyCode, mods, (0, 0),
                                         GetApplicationEventTarget(), 0)
