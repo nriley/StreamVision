@@ -127,7 +127,7 @@ class StreamVision(NSApplication):
         iTunes = iTunesApp()
         iTunes.playpause()
         if HAVE_XTENSION:
-            if iTunes.player_state() == k.playing:
+            if iTunes.player_state.get() == k.playing:
                 XTensionApp().turnon('Stereo')
             else:
                 XTensionApp().turnoff('Stereo')
