@@ -57,8 +57,15 @@ def cleanStreamTrackName(name):
         name = name[0]
     return name
 
-def iTunesApp():
-    return app(id='com.apple.iTunes')
+def iTunesApp(): return app(id='com.apple.iTunes')
+def XTensionApp(): return app(creator='SHEx')
+
+HAVE_XTENSION = False
+try:
+    XTensionApp()
+    HAVE_XTENSION = True
+except:
+    pass
 
 class StreamVision(NSApplication):
 
@@ -76,7 +83,8 @@ class StreamVision(NSApplication):
                 artwork = iTunes.current_track.artworks.get()
                 if artwork:
                     kw['pictImage'] = artwork[0].data.get()
-                growlNotify(iTunes.current_track.name.get(),
+                growlNotify(iTunes.current_track.name.get() + '  ' +
+                            '★' * (iTunes.current_track.rating.get() / 20),
                             iTunes.current_track.album.get() + "\n" +
                             iTunes.current_track.artist.get(),
                             **kw)
@@ -103,13 +111,36 @@ class StreamVision(NSApplication):
         self.hotKeys.append(hotKeyRef)
         self.hotKeyActions[_StreamVision.HotKeyAddress(hotKeyRef)] = func
 
+    def incrementRatingBy(self, increment):
+        iTunes = iTunesApp()
+        rating = iTunes.current_track.rating.get()
+        rating += increment
+        if rating < 0:
+            rating = 0
+            NSBeep()
+        elif rating > 100:
+            rating = 100
+            NSBeep()
+        iTunes.current_track.rating.set(rating)
+
+    def playPause(self):
+        iTunes = iTunesApp()
+        iTunes.playpause()
+        if HAVE_XTENSION:
+            if iTunes.player_state() == k.playing:
+                XTensionApp().turnon('Stereo')
+            else:
+                XTensionApp().turnoff('Stereo')
+
     def finishLaunching(self):
         super(StreamVision, self).finishLaunching()
         self.registerHotKey(self.displayTrackInfo, 100) # F8
         self.registerHotKey(self.goToSite, 100, cmdKey) # cmd-F8
-        self.registerHotKey(lambda: iTunesApp().playpause(), 101) # F9
+        self.registerHotKey(self.playPause, 101) # F9
         self.registerHotKey(lambda: iTunesApp().previous_track(), 109) # F10
         self.registerHotKey(lambda: iTunesApp().next_track(), 103) # F11
+        self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, cmdKey) # cmd-F10
+        self.registerHotKey(lambda: self.incrementRatingBy(20), 103, cmdKey) # cmd-F11
         NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
 
     def sendEvent_(self, theEvent):
