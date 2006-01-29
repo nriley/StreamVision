@@ -6,10 +6,10 @@ from AppKit import NSApplication, NSBeep, NSSystemDefined, NSURL, NSWorkspace
 from Foundation import NSDistributedNotificationCenter
 from PyObjCTools import AppHelper
 from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
-from Carbon.Events import cmdKey
+from Carbon.Events import cmdKey, shiftKey
 import struct
 import scrape
-import _StreamVision
+import HotKey
 
 GROWL_APP_NAME = 'StreamVision'
 NOTIFICATION_TRACK_INFO = 'iTunes Track Info'
@@ -74,25 +74,33 @@ class StreamVision(NSApplication):
 
     def displayTrackInfo(self):
         iTunes = iTunesApp()
-        if iTunes.player_state.get() == k.playing:
-            if iTunes.current_track.class_.get() == k.URL_track:
-                growlNotify(cleanStreamTitle(iTunes.current_stream_title.get()),
-                            cleanStreamTrackName(iTunes.current_track.name.get()))
-            else:
-                kw = {}
-                artwork = iTunes.current_track.artworks.get()
-                if artwork:
-                    kw['pictImage'] = artwork[0].data.get()
-                growlNotify(iTunes.current_track.name.get() + '  ' +
-                            '★' * (iTunes.current_track.rating.get() / 20),
-                            iTunes.current_track.album.get() + "\n" +
-                            iTunes.current_track.artist.get(),
-                            **kw)
-        else:
-            trackName = ''
-            if iTunes.current_track.class_.get() != k.Property:
-                trackName = iTunes.current_track.name.get()
-            growlNotify("iTunes is not playing.", trackName)
+
+        trackClass = iTunes.current_track.class_.get()
+        trackName = ''
+        if trackClass != k.Property:
+            trackName = iTunes.current_track.name.get()
+
+        if iTunes.player_state.get() != k.playing:
+            growlNotify('iTunes is not playing.', trackName)
+            return
+        if trackClass == k.URL_track:
+            growlNotify(cleanStreamTitle(iTunes.current_stream_title.get()),
+                        cleanStreamTrackName(trackName))
+            return
+        if trackClass == k.Property:
+           growlNotify('iTunes is playing.', '')
+           return
+        kw = {}
+        # XXX iTunes doesn't let you get artwork for shared tracks
+        if trackClass != k.shared_track:
+            artwork = iTunes.current_track.artworks.get()
+            if artwork:
+                kw['pictImage'] = artwork[0].data.get()
+        growlNotify(trackName + '  ' +
+                    '★' * (iTunes.current_track.rating.get() / 20),
+                    iTunes.current_track.album.get() + "\n" +
+                    iTunes.current_track.artist.get(),
+                    **kw)
 
     def goToSite(self):
         iTunes = iTunesApp()
@@ -109,7 +117,7 @@ class StreamVision(NSApplication):
         hotKeyRef = RegisterEventHotKey(keyCode, mods, (0, 0),
                                         GetApplicationEventTarget(), 0)
         self.hotKeys.append(hotKeyRef)
-        self.hotKeyActions[_StreamVision.HotKeyAddress(hotKeyRef)] = func
+        self.hotKeyActions[HotKey.HotKeyAddress(hotKeyRef)] = func
 
     def incrementRatingBy(self, increment):
         iTunes = iTunesApp()
@@ -139,8 +147,8 @@ class StreamVision(NSApplication):
         self.registerHotKey(self.playPause, 101) # F9
         self.registerHotKey(lambda: iTunesApp().previous_track(), 109) # F10
         self.registerHotKey(lambda: iTunesApp().next_track(), 103) # F11
-        self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, cmdKey) # cmd-F10
-        self.registerHotKey(lambda: self.incrementRatingBy(20), 103, cmdKey) # cmd-F11
+        self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, shiftKey) # shift-F10
+        self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
         NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
 
     def sendEvent_(self, theEvent):

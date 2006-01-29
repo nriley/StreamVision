@@ -12,7 +12,7 @@ typedef struct EventHotKeyRefObject {
 } EventHotKeyRefObject;
 
 static PyObject
-*StreamVision_HotKeyAddress(PyObject *self, PyObject *args) {
+*HotKey_HotKeyAddress(PyObject *self, PyObject *args) {
   PyObject *v;
   if (!PyArg_ParseTuple(args, "O", &v))
     return NULL;
@@ -23,14 +23,14 @@ static PyObject
   return PyInt_FromLong((int)((EventHotKeyRefObject *)v)->ob_itself);
 }
 
-static PyMethodDef _StreamVisionmodule_methods[] = {
-  {"HotKeyAddress", StreamVision_HotKeyAddress, METH_VARARGS,
+static PyMethodDef HotKeymodule_methods[] = {
+  {"HotKeyAddress", HotKey_HotKeyAddress, METH_VARARGS,
    "HotKeyAddress(_CarbonEvt.EventHotKeyRef) -> integer\n\n"
    "Return the address of the underlying EventHotKeyRef (passed as data1 in hot key NSEvents)."},
   {NULL, NULL, 0, NULL}
 };
 
 PyMODINIT_FUNC
-init_StreamVision(void) {
-  (void)Py_InitModule("_StreamVision", _StreamVisionmodule_methods);
+initHotKey(void) {
+  (void)Py_InitModule("HotKey", HotKeymodule_methods);
 }

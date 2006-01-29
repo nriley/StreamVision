@@ -16,8 +16,8 @@ plist = dict(
 
 setup(
     app=["StreamVision.py"],
-    ext_modules=[Extension('_StreamVision',
-                           sources=['_StreamVisionmodule.c'],
+    ext_modules=[Extension('HotKey',
+                           sources=['HotKeymodule.c'],
                            extra_link_args=['-framework', 'Carbon'])],
     data_files=["English.lproj"],
     options=dict(py2app=dict(plist=plist)),
