@@ -143,7 +143,7 @@ class StreamVision(NSApplication):
     def zoomWindow(self):
         systemEvents = app(id='com.apple.systemEvents')
         frontName = systemEvents.processes.filter(its.frontmost)[1].name()
-        if frontName is 'iTunes':
+        if frontName == 'iTunes':
             systemEvents.processes['iTunes'].menu_bars[1]. \
                 menu_bar_items['Window'].menus.menu_items['Zoom'].click()
             return
