@@ -1,12 +1,12 @@
 #!/usr/bin/pythonw
 # -*- coding: utf-8 -*-
 
-from appscript import app, k
+from appscript import app, k, its, CommandError
 from AppKit import NSApplication, NSBeep, NSSystemDefined, NSURL, NSWorkspace
 from Foundation import NSDistributedNotificationCenter
 from PyObjCTools import AppHelper
 from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
-from Carbon.Events import cmdKey, shiftKey
+from Carbon.Events import cmdKey, shiftKey, controlKey
 import struct
 import scrape
 import HotKey
@@ -139,6 +139,21 @@ class StreamVision(NSApplication):
                 XTensionApp().turnon('Stereo')
             else:
                 XTensionApp().turnoff('Stereo')
+                
+    def zoomWindow(self):
+        systemEvents = app(id='com.apple.systemEvents')
+        frontName = systemEvents.processes.filter(its.frontmost)[1].name()
+        if frontName is 'iTunes':
+            systemEvents.processes['iTunes'].menu_bars[1]. \
+                menu_bar_items['Window'].menus.menu_items['Zoom'].click()
+            return
+        try:
+            zoomed = app(frontName).windows[1].zoomed
+            zoomed.set(not zoomed())
+        except CommandError:
+            systemEvents.processes[frontName].windows. \
+                filter(its.subrole == 'AXStandardWindow').windows[1]. \
+                buttons.filter(its.subrole == 'AXZoomButton').buttons[1].click()
 
     def finishLaunching(self):
         super(StreamVision, self).finishLaunching()
@@ -149,6 +164,7 @@ class StreamVision(NSApplication):
         self.registerHotKey(lambda: iTunesApp().next_track(), 103) # F11
         self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, shiftKey) # shift-F10
         self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
+        self.registerHotKey(self.zoomWindow, 42, cmdKey | controlKey) # cmd-ctrl-\
         NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
 
     def sendEvent_(self, theEvent):
