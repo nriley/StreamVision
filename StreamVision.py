@@ -133,7 +133,12 @@ class StreamVision(NSApplication):
 
     def playPause(self):
         iTunes = iTunesApp()
+        was_playing = (iTunes.player_state.get() == k.playing)
         iTunes.playpause()
+        if not was_playing and iTunes.player_state.get() == k.stopped:
+            # most likely, we're focused on the iPod, so playing does nothing
+            iTunes.browser_windows[1].view.set(iTunes.user_playlists.filter(its.name=='Stations')[1].get())
+            iTunes.play()
         if HAVE_XTENSION:
             if iTunes.player_state.get() == k.playing:
                 XTensionApp().turnon('Stereo')
