@@ -118,6 +118,12 @@ class StreamVision(NSApplication):
                                         GetApplicationEventTarget(), 0)
         self.hotKeys.append(hotKeyRef)
         self.hotKeyActions[HotKey.HotKeyAddress(hotKeyRef)] = func
+        return hotKeyRef
+
+    def unregisterHotKey(self, hotKeyRef):
+        self.hotKeys.remove(hotKeyRef)
+        del self.hotKeyActions[HotKey.HotKeyAddress(hotKeyRef)]
+        hotKeyRef.UnregisterEventHotKey()
 
     def incrementRatingBy(self, increment):
         iTunes = iTunesApp()
@@ -144,7 +150,14 @@ class StreamVision(NSApplication):
                 XTensionApp().turnon('Stereo')
             else:
                 XTensionApp().turnoff('Stereo')
-                
+
+    def registerZoomWindowHotKey(self):
+        self.zoomWindowHotKey = self.registerHotKey(self.zoomWindow, 42, cmdKey | controlKey) # cmd-ctrl-\
+
+    def unregisterZoomWindowHotKey(self):
+        self.unregisterHotKey(self.zoomWindowHotKey)
+        self.zoomWindowHotKey = None
+
     def zoomWindow(self):
         systemEvents = app(id='com.apple.systemEvents')
         frontName = systemEvents.processes.filter(its.frontmost)[1].name()
@@ -152,10 +165,15 @@ class StreamVision(NSApplication):
             systemEvents.processes['iTunes'].menu_bars[1]. \
                 menu_bar_items['Window'].menus.menu_items['Zoom'].click()
             return
+        elif frontName in ('X11', 'Emacs'): # preserve C-M-\
+            self.unregisterZoomWindowHotKey()
+            systemEvents.key_code(42, using=[k.command_down, k.control_down])
+            self.registerZoomWindowHotKey()
+            return
         try:
             zoomed = app(frontName).windows[1].zoomed
             zoomed.set(not zoomed())
-        except CommandError:
+        except (CommandError, RuntimeError):
             systemEvents.processes[frontName].windows. \
                 filter(its.subrole == 'AXStandardWindow').windows[1]. \
                 buttons.filter(its.subrole == 'AXZoomButton').buttons[1].click()
@@ -169,7 +187,7 @@ class StreamVision(NSApplication):
         self.registerHotKey(lambda: iTunesApp().next_track(), 103) # F11
         self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, shiftKey) # shift-F10
         self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
-        self.registerHotKey(self.zoomWindow, 42, cmdKey | controlKey) # cmd-ctrl-\
+        self.registerZoomWindowHotKey()
         NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
 
     def sendEvent_(self, theEvent):
