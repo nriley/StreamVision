@@ -107,7 +107,7 @@ class StreamVision(NSApplication):
         if iTunes.player_state.get() == k.playing:
             url = iTunes.current_stream_URL.get()
             if url:
-                if 'radioparadise.com' in url:
+                if 'radioparadise.com' in url and 'review' not in url:
                     url = radioParadiseURL()
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
                 return
