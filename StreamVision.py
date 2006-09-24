@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from appscript import app, k, its, CommandError
-from AppKit import NSApplication, NSBeep, NSSystemDefined, NSURL, NSWorkspace
+from AppKit import NSApplication, NSApplicationDefined, NSBeep, NSSystemDefined, NSURL, NSWorkspace
 from Foundation import NSDistributedNotificationCenter
 from PyObjCTools import AppHelper
 from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
 from Carbon.Events import cmdKey, shiftKey, controlKey
 import struct
 import scrape
+import HIDRemote
 import HotKey
 
 GROWL_APP_NAME = 'StreamVision'
@@ -17,6 +18,10 @@ NOTIFICATIONS_ALL = [NOTIFICATION_TRACK_INFO]
 
 kEventHotKeyPressedSubtype = 6
 kEventHotKeyReleasedSubtype = 9
+
+kHIDUsage_Csmr_ScanNextTrack = 0xB5
+kHIDUsage_Csmr_ScanPreviousTrack = 0xB6
+kHIDUsage_Csmr_PlayOrPause = 0xCD
 
 growl = app('GrowlHelperApp')
 
@@ -137,7 +142,7 @@ class StreamVision(NSApplication):
             NSBeep()
         iTunes.current_track.rating.set(rating)
 
-    def playPause(self):
+    def playPause(self, useStereo=True):
         iTunes = iTunesApp()
         was_playing = (iTunes.player_state.get() == k.playing)
         iTunes.playpause()
@@ -145,7 +150,7 @@ class StreamVision(NSApplication):
             # most likely, we're focused on the iPod, so playing does nothing
             iTunes.browser_windows[1].view.set(iTunes.user_playlists.filter(its.name=='Stations')[1].get())
             iTunes.play()
-        if HAVE_XTENSION:
+        if HAVE_XTENSION and useStereo:
             if iTunes.player_state.get() == k.playing:
                 XTensionApp().turnon('Stereo')
             else:
@@ -189,12 +194,26 @@ class StreamVision(NSApplication):
         self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
         self.registerZoomWindowHotKey()
         NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
+        try:
+            HIDRemote.connect()
+        except OSError, e:
+            print "failed to connect to remote: ", e
 
     def sendEvent_(self, theEvent):
-        if theEvent.type() == NSSystemDefined and \
+        eventType = theEvent.type()
+        if eventType == NSSystemDefined and \
                theEvent.subtype() == kEventHotKeyPressedSubtype:
             self.hotKeyActions[theEvent.data1()]()
+        elif eventType == NSApplicationDefined:
+            key = theEvent.data1()
+            if key == kHIDUsage_Csmr_ScanNextTrack:
+                iTunesApp().next_track()
+            elif key == kHIDUsage_Csmr_ScanPreviousTrack:
+                iTunesApp().previous_track()
+            elif key == kHIDUsage_Csmr_PlayOrPause:
+                self.playPause(useStereo=False)
         super(StreamVision, self).sendEvent_(theEvent)
 
 if __name__ == "__main__":
     AppHelper.runEventLoop()
+    HIDRemote.disconnect() # XXX do we get here?

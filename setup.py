@@ -18,7 +18,12 @@ setup(
     app=["StreamVision.py"],
     ext_modules=[Extension('HotKey',
                            sources=['HotKeymodule.c'],
-                           extra_link_args=['-framework', 'Carbon'])],
+                           extra_link_args=['-framework', 'Carbon']),
+                 Extension('HIDRemote',
+                           sources=['HIDRemotemodule.m'],
+                           extra_link_args=['-framework', 'Cocoa',
+                                            '-framework', 'IOKit',
+                                            'libHIDUtilities.a'])],
     data_files=["English.lproj"],
     options=dict(py2app=dict(plist=plist)),
 )
