@@ -156,6 +156,20 @@ class StreamVision(NSApplication):
             else:
                 XTensionApp().turnoff('Stereo')
 
+    def playPauseFront(self):
+        systemEvents = app(id='com.apple.systemEvents')
+        frontName = systemEvents.processes.filter(its.frontmost)[1].name()
+	if frontName == 'RealPlayer':
+	    realPlayer = app(id='com.RealNetworks.RealPlayer')
+	    if realPlayer.players[0].state.get() == k.playing:
+		realPlayer.pause()
+	    else:
+		realPlayer.play()
+	elif frontName == 'VLC':
+	    app(id='org.videolan.vlc').play() # equivalent to playpause
+	else:
+	    self.playPause(useStereo=False)	
+
     def registerZoomWindowHotKey(self):
         self.zoomWindowHotKey = self.registerHotKey(self.zoomWindow, 42, cmdKey | controlKey) # cmd-ctrl-\
 
@@ -211,7 +225,7 @@ class StreamVision(NSApplication):
             elif key == kHIDUsage_Csmr_ScanPreviousTrack:
                 iTunesApp().previous_track()
             elif key == kHIDUsage_Csmr_PlayOrPause:
-                self.playPause(useStereo=False)
+                self.playPauseFront()
         super(StreamVision, self).sendEvent_(theEvent)
 
 if __name__ == "__main__":
