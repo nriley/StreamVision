@@ -9,7 +9,6 @@ from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
 from Carbon.Events import cmdKey, shiftKey, controlKey
 import struct
 import scrape
-import HIDRemote
 import HotKey
 
 GROWL_APP_NAME = 'StreamVision'
@@ -168,7 +167,7 @@ class StreamVision(NSApplication):
 	elif frontName == 'VLC':
 	    app(id='org.videolan.vlc').play() # equivalent to playpause
 	else:
-	    self.playPause(useStereo=False)	
+	    self.playPause(useStereo=False)
 
     def registerZoomWindowHotKey(self):
         self.zoomWindowHotKey = self.registerHotKey(self.zoomWindow, 42, cmdKey | controlKey) # cmd-ctrl-\
@@ -209,7 +208,10 @@ class StreamVision(NSApplication):
         self.registerZoomWindowHotKey()
         NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
         try:
+            import HIDRemote
             HIDRemote.connect()
+        except ImportError:
+            print "failed to import HIDRemote (XXX fix - on Intel)"
         except OSError, e:
             print "failed to connect to remote: ", e
 

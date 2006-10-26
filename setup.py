@@ -4,7 +4,8 @@ Script for building the example.
 Usage:
     python setup.py py2app
 """
-from distutils.core import setup, Extension
+from distutils.core import setup
+from setuptools.extension import Extension
 import py2app
 
 plist = dict(
