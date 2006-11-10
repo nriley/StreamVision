@@ -147,7 +147,7 @@ class StreamVision(NSApplication):
         iTunes.playpause()
         if not was_playing and iTunes.player_state.get() == k.stopped:
             # most likely, we're focused on the iPod, so playing does nothing
-            iTunes.browser_windows[1].view.set(iTunes.user_playlists.filter(its.name=='Stations')[1].get())
+            iTunes.browser_windows[1].view.set(iTunes.user_playlists[its.name=='Stations'][1].get())
             iTunes.play()
         if HAVE_XTENSION and useStereo:
             if iTunes.player_state.get() == k.playing:
@@ -157,7 +157,7 @@ class StreamVision(NSApplication):
 
     def playPauseFront(self):
         systemEvents = app(id='com.apple.systemEvents')
-        frontName = systemEvents.processes.filter(its.frontmost)[1].name()
+        frontName = systemEvents.processes[its.frontmost][1].name()
 	if frontName == 'RealPlayer':
 	    realPlayer = app(id='com.RealNetworks.RealPlayer')
 	    if realPlayer.players[0].state.get() == k.playing:
@@ -177,8 +177,9 @@ class StreamVision(NSApplication):
         self.zoomWindowHotKey = None
 
     def zoomWindow(self):
+        # XXX detect if "enable access for assistive devices" needs to be enabled
         systemEvents = app(id='com.apple.systemEvents')
-        frontName = systemEvents.processes.filter(its.frontmost)[1].name()
+        frontName = systemEvents.processes[its.frontmost][1].name()
         if frontName == 'iTunes':
             systemEvents.processes['iTunes'].menu_bars[1]. \
                 menu_bar_items['Window'].menus.menu_items['Zoom'].click()
@@ -192,9 +193,9 @@ class StreamVision(NSApplication):
             zoomed = app(frontName).windows[1].zoomed
             zoomed.set(not zoomed())
         except (CommandError, RuntimeError):
-            systemEvents.processes[frontName].windows. \
-                filter(its.subrole == 'AXStandardWindow').windows[1]. \
-                buttons.filter(its.subrole == 'AXZoomButton').buttons[1].click()
+            systemEvents.processes[frontName].windows \
+                [its.subrole == 'AXStandardWindow'].windows[1]. \
+                buttons[its.subrole == 'AXZoomButton'].buttons[1].click()
 
     def finishLaunching(self):
         super(StreamVision, self).finishLaunching()
