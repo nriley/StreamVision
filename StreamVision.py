@@ -40,6 +40,7 @@ def growlNotify(title, description, **kw):
         **kw)
 
 def radioParadiseURL():
+    # XXX better to use http://www2.radioparadise.com/playlist.xml ?
     session = scrape.Session()
     session.go('http://www2.radioparadise.com/nowplay_b.php')
     return session.region.firsttag('a')['href']
@@ -79,37 +80,37 @@ class StreamVision(NSApplication):
     def displayTrackInfo(self):
         iTunes = iTunesApp()
 
-        trackClass = iTunes.current_track.class_.get()
+        trackClass = iTunes.current_track.class_()
         trackName = ''
-        if trackClass != k.Property:
-            trackName = iTunes.current_track.name.get()
+        if trackClass != k.property:
+            trackName = iTunes.current_track.name()
 
-        if iTunes.player_state.get() != k.playing:
+        if iTunes.player_state() != k.playing:
             growlNotify('iTunes is not playing.', trackName)
             return
         if trackClass == k.URL_track:
-            growlNotify(cleanStreamTitle(iTunes.current_stream_title.get()),
+            growlNotify(cleanStreamTitle(iTunes.current_stream_title()),
                         cleanStreamTrackName(trackName))
             return
-        if trackClass == k.Property:
+        if trackClass == k.property:
            growlNotify('iTunes is playing.', '')
            return
         kw = {}
         # XXX iTunes doesn't let you get artwork for shared tracks
         if trackClass != k.shared_track:
-            artwork = iTunes.current_track.artworks.get()
+            artwork = iTunes.current_track.artworks()
             if artwork:
-                kw['pictImage'] = artwork[0].data.get()
+                kw['pictImage'] = artwork[0].data()
         growlNotify(trackName + '  ' +
-                    '★' * (iTunes.current_track.rating.get() / 20),
-                    iTunes.current_track.album.get() + "\n" +
-                    iTunes.current_track.artist.get(),
+                    '★' * (iTunes.current_track.rating() / 20),
+                    iTunes.current_track.album() + "\n" +
+                    iTunes.current_track.artist(),
                     **kw)
 
     def goToSite(self):
         iTunes = iTunesApp()
-        if iTunes.player_state.get() == k.playing:
-            url = iTunes.current_stream_URL.get()
+        if iTunes.player_state() == k.playing:
+            url = iTunes.current_stream_URL()
             if url:
                 if 'radioparadise.com' in url and 'review' not in url:
                     url = radioParadiseURL()
@@ -131,7 +132,7 @@ class StreamVision(NSApplication):
 
     def incrementRatingBy(self, increment):
         iTunes = iTunesApp()
-        rating = iTunes.current_track.rating.get()
+        rating = iTunes.current_track.rating()
         rating += increment
         if rating < 0:
             rating = 0
@@ -143,14 +144,14 @@ class StreamVision(NSApplication):
 
     def playPause(self, useStereo=True):
         iTunes = iTunesApp()
-        was_playing = (iTunes.player_state.get() == k.playing)
+        was_playing = (iTunes.player_state() == k.playing)
         iTunes.playpause()
-        if not was_playing and iTunes.player_state.get() == k.stopped:
+        if not was_playing and iTunes.player_state() == k.stopped:
             # most likely, we're focused on the iPod, so playing does nothing
-            iTunes.browser_windows[1].view.set(iTunes.user_playlists[its.name=='Stations'][1].get())
+            iTunes.browser_windows[1].view.set(iTunes.user_playlists[its.name=='Stations'][1]())
             iTunes.play()
         if HAVE_XTENSION and useStereo:
-            if iTunes.player_state.get() == k.playing:
+            if iTunes.player_state() == k.playing:
                 XTensionApp().turnon('Stereo')
             else:
                 XTensionApp().turnoff('Stereo')
@@ -160,10 +161,12 @@ class StreamVision(NSApplication):
         frontName = systemEvents.processes[its.frontmost][1].name()
 	if frontName == 'RealPlayer':
 	    realPlayer = app(id='com.RealNetworks.RealPlayer')
-	    if realPlayer.players[0].state.get() == k.playing:
-		realPlayer.pause()
-	    else:
-		realPlayer.play()
+	    if len(realPlayer.players()) > 0:
+		if realPlayer.players[1].state() == k.playing:
+		    realPlayer.pause()
+		else:
+		    realPlayer.play()
+		return
 	elif frontName == 'VLC':
 	    app(id='org.videolan.vlc').play() # equivalent to playpause
 	else:
