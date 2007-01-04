@@ -46,7 +46,7 @@ def radioParadiseURL():
     return session.region.firsttag('a')['href']
 
 def cleanStreamTitle(title):
-    if title == k.MissingValue:
+    if title == k.missing_value:
         return ''
     title = title.split(' [')[0] # XXX move to description
     title = title.replace('`', u'’')
@@ -111,7 +111,7 @@ class StreamVision(NSApplication):
         iTunes = iTunesApp()
         if iTunes.player_state() == k.playing:
             url = iTunes.current_stream_URL()
-            if url:
+            if url != k.missing_value:
                 if 'radioparadise.com' in url and 'review' not in url:
                     url = radioParadiseURL()
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
