@@ -50,7 +50,7 @@ def cleanStreamTitle(title):
         return ''
     title = title.split(' [')[0] # XXX move to description
     title = title.replace('`', u'’')
-    return title
+    return title.encode('iso-8859-1').decode('utf-8') # XXX iTunes 7.1 or RP?
 
 def cleanStreamTrackName(name):
     name = name.split('. ')[0]
