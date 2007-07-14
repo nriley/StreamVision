@@ -73,12 +73,16 @@ try:
 except:
     pass
 
+needsStereoPowerOn = HAVE_XTENSION
+
 class StreamVision(NSApplication):
 
     hotKeyActions = {}
     hotKeys = []
 
     def displayTrackInfo(self):
+        global needsStereoPowerOn
+
         iTunes = iTunesApp()
 
         trackClass = iTunes.current_track.class_()
@@ -88,14 +92,22 @@ class StreamVision(NSApplication):
 
         if iTunes.player_state() != k.playing:
             growlNotify('iTunes is not playing.', trackName)
+            if HAVE_XTENSION:
+                if not needsStereoPowerOn and XTensionApp().status('Stereo'):
+                    XTensionApp().turnoff('Stereo')
+                needsStereoPowerOn = True
             return
+        if needsStereoPowerOn:
+            if not XTensionApp().status('Stereo'):
+                XTensionApp().turnon('Stereo')
+            needsStereoPowerOn = False
         if trackClass == k.URL_track:
             growlNotify(cleanStreamTitle(iTunes.current_stream_title()),
                         cleanStreamTrackName(trackName))
             return
         if trackClass == k.property:
-           growlNotify('iTunes is playing.', '')
-           return
+            growlNotify('iTunes is playing.', '')
+            return
         kw = {}
         # XXX iTunes doesn't let you get artwork for shared tracks
         if trackClass != k.shared_track:
@@ -144,8 +156,12 @@ class StreamVision(NSApplication):
         iTunes.current_track.rating.set(rating)
 
     def playPause(self, useStereo=True):
+        global needsStereoPowerOn
+
         iTunes = iTunesApp()
         was_playing = (iTunes.player_state() == k.playing)
+        if not useStereo:
+            needsStereoPowerOn = False
         iTunes.playpause()
         if not was_playing and iTunes.player_state() == k.stopped:
             # most likely, we're focused on the iPod, so playing does nothing
@@ -154,8 +170,10 @@ class StreamVision(NSApplication):
         if HAVE_XTENSION and useStereo:
             if iTunes.player_state() == k.playing:
                 XTensionApp().turnon('Stereo')
+                needsStereoPowerOn = False
             else:
                 XTensionApp().turnoff('Stereo')
+                needsStereoPowerOn = True
 
     def playPauseFront(self):
         systemEvents = app(id='com.apple.systemEvents')
