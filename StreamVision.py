@@ -49,8 +49,9 @@ def cleanStreamTitle(title):
     if title == k.missing_value:
         return ''
     title = title.split(' [')[0] # XXX move to description
+    title = title.encode('iso-8859-1').decode('utf-8') # XXX iTunes 7.1 or RP?
     title = title.replace('`', u'’')
-    return title.encode('iso-8859-1').decode('utf-8') # XXX iTunes 7.1 or RP?
+    return title
 
 def cleanStreamTrackName(name):
     name = name.split('. ')[0]
@@ -102,8 +103,8 @@ class StreamVision(NSApplication):
             if artwork:
                 kw['pictImage'] = artwork[0].data()
         growlNotify(trackName + '  ' +
-                    '★' * (iTunes.current_track.rating() / 20),
-                    iTunes.current_track.album() + "\n" +
+                    u'★' * (iTunes.current_track.rating() / 20),
+                    iTunes.current_track.album() + '\n' +
                     iTunes.current_track.artist(),
                     **kw)
 
