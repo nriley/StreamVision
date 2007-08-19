@@ -49,6 +49,7 @@ def cleanStreamTitle(title):
     if title == k.missing_value:
         return ''
     title = title.split(' [')[0] # XXX move to description
+    # XXX fails with Arvo Pärt
     title = title.encode('iso-8859-1').decode('utf-8') # XXX iTunes 7.1 or RP?
     title = title.replace('`', u'’')
     return title
@@ -211,8 +212,9 @@ class StreamVision(NSApplication):
             systemEvents.key_code(42, using=[k.command_down, k.control_down])
             self.registerZoomWindowHotKey()
             return
+        frontPID = systemEvents.processes[its.frontmost][1].unix_id()
         try:
-            zoomed = app(frontName).windows[1].zoomed
+            zoomed = app(pid=frontPID).windows[1].zoomed
             zoomed.set(not zoomed())
         except (CommandError, RuntimeError):
             systemEvents.processes[frontName].windows \
@@ -255,4 +257,7 @@ class StreamVision(NSApplication):
 
 if __name__ == "__main__":
     AppHelper.runEventLoop()
-    HIDRemote.disconnect() # XXX do we get here?
+    try:
+        HIDRemote.disconnect()
+    except:
+        pass
