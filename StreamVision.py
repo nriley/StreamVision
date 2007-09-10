@@ -22,22 +22,28 @@ kHIDUsage_Csmr_ScanNextTrack = 0xB5
 kHIDUsage_Csmr_ScanPreviousTrack = 0xB6
 kHIDUsage_Csmr_PlayOrPause = 0xCD
 
-growl = app('GrowlHelperApp')
+def growlRegister():
+    global growl
+    growl = app(id='com.Growl.GrowlHelperApp')
 
-growl.register(
-    as_application=GROWL_APP_NAME,
-    all_notifications=NOTIFICATIONS_ALL,
-    default_notifications=NOTIFICATIONS_ALL,
-    icon_of_application='iTunes.app')
-    # if we leave off the .app, we can get Classic iTunes's icon
+    growl.register(
+        as_application=GROWL_APP_NAME,
+        all_notifications=NOTIFICATIONS_ALL,
+        default_notifications=NOTIFICATIONS_ALL,
+        icon_of_application='iTunes.app')
+        # if we leave off the .app, we can get Classic iTunes's icon
 
 def growlNotify(title, description, **kw):
-    growl.notify(
-        with_name=NOTIFICATION_TRACK_INFO,
-        title=title,
-        description=description,
-        application_name=GROWL_APP_NAME,
-        **kw)
+    try:
+        growl.notify(
+            with_name=NOTIFICATION_TRACK_INFO,
+            title=title,
+            description=description,
+            application_name=GROWL_APP_NAME,
+            **kw)
+    except CommandError:
+        growlRegister()
+        growlNotify(title, description, **kw)
 
 def radioParadiseURL():
     # XXX better to use http://www2.radioparadise.com/playlist.xml ?
@@ -178,7 +184,7 @@ class StreamVision(NSApplication):
 
     def playPauseFront(self):
         systemEvents = app(id='com.apple.systemEvents')
-        frontName = systemEvents.processes[its.frontmost][1].name()
+        frontName = systemEvents.processes[its.frontmost == True][1].name()
 	if frontName == 'RealPlayer':
 	    realPlayer = app(id='com.RealNetworks.RealPlayer')
 	    if len(realPlayer.players()) > 0:
@@ -202,7 +208,7 @@ class StreamVision(NSApplication):
     def zoomWindow(self):
         # XXX detect if "enable access for assistive devices" needs to be enabled
         systemEvents = app(id='com.apple.systemEvents')
-        frontName = systemEvents.processes[its.frontmost][1].name()
+        frontName = systemEvents.processes[its.frontmost == True][1].name()
         if frontName == 'iTunes':
             systemEvents.processes['iTunes'].menu_bars[1]. \
                 menu_bar_items['Window'].menus.menu_items['Zoom'].click()
@@ -212,7 +218,7 @@ class StreamVision(NSApplication):
             systemEvents.key_code(42, using=[k.command_down, k.control_down])
             self.registerZoomWindowHotKey()
             return
-        frontPID = systemEvents.processes[its.frontmost][1].unix_id()
+        frontPID = systemEvents.processes[its.frontmost == True][1].unix_id()
         try:
             zoomed = app(pid=frontPID).windows[1].zoomed
             zoomed.set(not zoomed())
@@ -256,6 +262,7 @@ class StreamVision(NSApplication):
         super(StreamVision, self).sendEvent_(theEvent)
 
 if __name__ == "__main__":
+    growlRegister()
     AppHelper.runEventLoop()
     try:
         HIDRemote.disconnect()
