@@ -55,8 +55,10 @@ def cleanStreamTitle(title):
     if title == k.missing_value:
         return ''
     title = title.split(' [')[0] # XXX move to description
-    # XXX fails with Arvo Pärt
-    title = title.encode('iso-8859-1').decode('utf-8') # XXX iTunes 7.1 or RP?
+    try: # incorrectly encoded?
+        title = title.encode('iso-8859-1').decode('utf-8')
+    except UnicodeDecodeError:
+        pass
     title = title.replace('`', u'’')
     return title
 
