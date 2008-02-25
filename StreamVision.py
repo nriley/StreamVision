@@ -74,6 +74,7 @@ def cleanStreamTrackName(name):
 
 def iTunesApp(): return app(id='com.apple.iTunes')
 def XTensionApp(): return app(creator='SHEx')
+def AmuaApp(): return app('Amua.app')
 
 HAVE_XTENSION = False
 try:
@@ -82,14 +83,26 @@ try:
 except:
     pass
 
+HAVE_AMUA = False
+try:
+    AmuaApp()
+    HAVE_AMUA = True
+except:
+    pass
+
 needsStereoPowerOn = HAVE_XTENSION
+
+def amuaPlaying():
+    if not HAVE_AMUA:
+        return False
+    return AmuaApp().is_playing()
 
 class StreamVision(NSApplication):
 
     hotKeyActions = {}
     hotKeys = []
 
-    def displayTrackInfo(self):
+    def displayTrackInfo(self, playerInfo=None):
         global needsStereoPowerOn
 
         iTunes = iTunesApp()
@@ -111,6 +124,10 @@ class StreamVision(NSApplication):
                 XTensionApp().turnon('Stereo')
             needsStereoPowerOn = False
         if trackClass == k.URL_track:
+            if amuaPlaying():
+                if playerInfo is None: # Amua displays it itself
+                    AmuaApp().display_song_information()
+                return
             growlNotify(cleanStreamTitle(iTunes.current_stream_title()),
                         cleanStreamTrackName(trackName))
             return
@@ -132,6 +149,9 @@ class StreamVision(NSApplication):
     def goToSite(self):
         iTunes = iTunesApp()
         if iTunes.player_state() == k.playing:
+            if amuaPlaying():
+                AmuaApp().display_album_details()
+                return
             url = iTunes.current_stream_URL()
             if url != k.missing_value:
                 if 'radioparadise.com' in url and 'review' not in url:
@@ -154,6 +174,14 @@ class StreamVision(NSApplication):
 
     def incrementRatingBy(self, increment):
         iTunes = iTunesApp()
+        if amuaPlaying():
+            if rating < 0:
+                AmuaApp().ban_song()
+                growlNotify('Banned song.', '')
+            else:
+                AmuaApp().love_song()
+                growlNotify('Loved song.', '')
+            return
         rating = iTunes.current_track.rating()
         rating += increment
         if rating < 0:
@@ -171,7 +199,10 @@ class StreamVision(NSApplication):
         was_playing = (iTunes.player_state() == k.playing)
         if not useStereo:
             needsStereoPowerOn = False
-        iTunes.playpause()
+        if was_playing and amuaPlaying():
+            AmuaApp().stop()
+        else:
+            iTunes.playpause()
         if not was_playing and iTunes.player_state() == k.stopped:
             # most likely, we're focused on the iPod, so playing does nothing
             iTunes.browser_windows[1].view.set(iTunes.user_playlists[its.name=='Stations'][1]())
@@ -199,6 +230,12 @@ class StreamVision(NSApplication):
 	    app(id='org.videolan.vlc').play() # equivalent to playpause
 	else:
 	    self.playPause(useStereo=False)
+
+    def nextTrack(self):
+        if amuaPlaying():
+            AmuaApp().skip_song()
+            return
+        iTunesApp().next_track()
 
     def registerZoomWindowHotKey(self):
         self.zoomWindowHotKey = self.registerHotKey(self.zoomWindow, 42, cmdKey | controlKey) # cmd-ctrl-\
@@ -235,7 +272,7 @@ class StreamVision(NSApplication):
         self.registerHotKey(self.goToSite, 100, cmdKey) # cmd-F8
         self.registerHotKey(self.playPause, 101) # F9
         self.registerHotKey(lambda: iTunesApp().previous_track(), 109) # F10
-        self.registerHotKey(lambda: iTunesApp().next_track(), 103) # F11
+        self.registerHotKey(self.nextTrack, 103) # F11
         self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, shiftKey) # shift-F10
         self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
         self.registerZoomWindowHotKey()
