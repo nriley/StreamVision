@@ -175,7 +175,7 @@ class StreamVision(NSApplication):
     def incrementRatingBy(self, increment):
         iTunes = iTunesApp()
         if amuaPlaying():
-            if rating < 0:
+            if increment < 0:
                 AmuaApp().ban_song()
                 growlNotify('Banned song.', '')
             else:
@@ -293,7 +293,7 @@ class StreamVision(NSApplication):
         elif eventType == NSApplicationDefined:
             key = theEvent.data1()
             if key == kHIDUsage_Csmr_ScanNextTrack:
-                iTunesApp().next_track()
+                self.nextTrack()
             elif key == kHIDUsage_Csmr_ScanPreviousTrack:
                 iTunesApp().previous_track()
             elif key == kHIDUsage_Csmr_PlayOrPause:
