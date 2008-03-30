@@ -57,7 +57,7 @@ def cleanStreamTitle(title):
     title = title.split(' [')[0] # XXX move to description
     try: # incorrectly encoded?
         title = title.encode('iso-8859-1').decode('utf-8')
-    except UnicodeDecodeError:
+    except (UnicodeDecodeError, UnicodeEncodeError):
         pass
     title = title.replace('`', u'’')
     return title
