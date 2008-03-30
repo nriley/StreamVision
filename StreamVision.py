@@ -177,10 +177,10 @@ class StreamVision(NSApplication):
         if amuaPlaying():
             if increment < 0:
                 AmuaApp().ban_song()
-                growlNotify('Banned song.', '')
+                growlNotify('Banned song.', '', icon_of_application='Amua.app')
             else:
                 AmuaApp().love_song()
-                growlNotify('Loved song.', '')
+                growlNotify('Loved song.', '', icon_of_application='Amua.app')
             return
         rating = iTunes.current_track.rating()
         rating += increment
