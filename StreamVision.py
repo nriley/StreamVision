@@ -170,7 +170,10 @@ class StreamVision(NSApplication):
         if trackClass != k.shared_track:
             artwork = iTunes.current_track.artworks()
             if artwork:
-                kw['pictImage'] = artwork[0].data()
+                try:
+                    kw['pictImage'] = artwork[0].data()
+                except CommandError:
+                    pass
         growlNotify(trackName + '  ' +
                     u'★' * (iTunes.current_track.rating() / 20),
                     iTunes.current_track.album() + '\n' +
