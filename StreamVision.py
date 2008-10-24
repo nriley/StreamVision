@@ -3,10 +3,12 @@
 
 from appscript import app, k, its, CommandError
 from AppKit import NSApplication, NSApplicationDefined, NSBeep, NSSystemDefined, NSURL, NSWorkspace
-from Foundation import NSDistributedNotificationCenter
+from Foundation import NSDistributedNotificationCenter, NSSearchPathForDirectoriesInDomains, NSCachesDirectory, NSUserDomainMask
 from PyObjCTools import AppHelper
 from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
 from Carbon.Events import cmdKey, shiftKey, controlKey
+import httplib2
+import os
 import struct
 import scrape
 import HotKey
@@ -97,6 +99,28 @@ def amuaPlaying():
         return False
     return AmuaApp().is_playing()
 
+class OneFileCache(object):
+    __slots__ = ('key', 'cache')
+
+    def __init__(self, cache):
+        if not os.path.exists(cache):
+            os.makedirs(cache)
+        self.cache = os.path.join(cache, 'file')
+        self.key = None
+
+    def get(self, key):
+        if key == self.key:
+            return file(self.cache, 'r').read()
+
+    def set(self, key, value):
+        self.key = key
+        file(self.cache, 'w').write(value)
+
+    def delete(self, key):
+        if key == self.key:
+            self.key = None
+            os.remove(cache)
+
 class StreamVision(NSApplication):
 
     hotKeyActions = {}
@@ -128,8 +152,15 @@ class StreamVision(NSApplication):
                 if playerInfo is None: # Amua displays it itself
                     AmuaApp().display_song_information()
                 return
+            url = iTunes.current_stream_URL()
+            kw = {}
+            if url != k.missing_value and url.endswith('.jpg'):
+                response, content = self.http.request(url)
+                if response['content-type'].startswith('image/'):
+                    file(self.imagePath, 'w').write(content)
+                    kw['image_from_location'] = self.imagePath
             growlNotify(cleanStreamTitle(iTunes.current_stream_title()),
-                        cleanStreamTrackName(trackName))
+                        cleanStreamTrackName(trackName), **kw)
             return
         if trackClass == k.property:
             growlNotify('iTunes is playing.', '')
@@ -268,6 +299,13 @@ class StreamVision(NSApplication):
 
     def finishLaunching(self):
         super(StreamVision, self).finishLaunching()
+
+        caches = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
+                                                     NSUserDomainMask, True)[0]
+        cache = os.path.join(caches, 'StreamVision')
+        self.http = httplib2.Http(OneFileCache(cache), 5)
+        self.imagePath = os.path.join(cache, 'image')
+
         self.registerHotKey(self.displayTrackInfo, 100) # F8
         self.registerHotKey(self.goToSite, 100, cmdKey) # cmd-F8
         self.registerHotKey(self.playPause, 101) # F9
