@@ -131,7 +131,11 @@ class StreamVision(NSApplication):
 
         iTunes = iTunesApp()
 
-        trackClass = iTunes.current_track.class_()
+        try:
+            trackClass = iTunes.current_track.class_()
+        except CommandError:
+            trackClass = k.property
+
         trackName = ''
         if trackClass != k.property:
             trackName = iTunes.current_track.name()
