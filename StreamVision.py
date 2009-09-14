@@ -94,6 +94,28 @@ except:
 
 needsStereoPowerOn = HAVE_XTENSION
 
+def mayUseStereo():
+    if not HAVE_XTENSION:
+        return False
+    systemEvents = app(id='com.apple.systemEvents')
+    return not systemEvents.application_processes[u'iTunes'].windows[1].buttons[its.title == u'Computer'].exists()
+
+def turnStereoOn():
+    global needsStereoPowerOn
+    if not mayUseStereo():
+        return
+    if not XTensionApp().status('Stereo'):
+        XTensionApp().turnon('Stereo')
+    needsStereoPowerOn = False
+
+def turnStereoOff():
+    global needsStereoPowerOn
+    if not mayUseStereo():
+        return
+    if not needsStereoPowerOn and XTensionApp().status('Stereo'):
+        XTensionApp().turnoff('Stereo')
+    needsStereoPowerOn = True
+
 def amuaPlaying():
     if not HAVE_AMUA:
         return False
@@ -127,8 +149,6 @@ class StreamVision(NSApplication):
     hotKeys = []
 
     def displayTrackInfo(self, playerInfo=None):
-        global needsStereoPowerOn
-
         iTunes = iTunesApp()
 
         try:
@@ -142,15 +162,9 @@ class StreamVision(NSApplication):
 
         if iTunes.player_state() != k.playing:
             growlNotify('iTunes is not playing.', trackName)
-            if HAVE_XTENSION:
-                if not needsStereoPowerOn and XTensionApp().status('Stereo'):
-                    XTensionApp().turnoff('Stereo')
-                needsStereoPowerOn = True
+            turnStereoOff()
             return
-        if needsStereoPowerOn:
-            if not XTensionApp().status('Stereo'):
-                XTensionApp().turnon('Stereo')
-            needsStereoPowerOn = False
+        turnStereoOn()
         if trackClass == k.URL_track:
             if amuaPlaying():
                 if playerInfo is None: # Amua displays it itself
@@ -245,13 +259,12 @@ class StreamVision(NSApplication):
             # most likely, we're focused on the iPod, so playing does nothing
             iTunes.browser_windows[1].view.set(iTunes.user_playlists[its.name=='Stations'][1]())
             iTunes.play()
-        if HAVE_XTENSION and useStereo:
-            if iTunes.player_state() == k.playing:
-                XTensionApp().turnon('Stereo')
-                needsStereoPowerOn = False
-            else:
-                XTensionApp().turnoff('Stereo')
-                needsStereoPowerOn = True
+        if not useStereo:
+            return
+        if iTunes.player_state() == k.playing:
+            turnStereoOn()
+        else:
+            turnStereoOff()
 
     def playPauseFront(self):
         systemEvents = app(id='com.apple.systemEvents')
