@@ -98,11 +98,14 @@ def mayUseStereo():
     if not HAVE_XTENSION:
         return False
     systemEvents = app(id='com.apple.systemEvents')
-    return not systemEvents.application_processes[u'iTunes'].windows[1].buttons[its.title == u'Computer'].exists()
+    remote_speakers = systemEvents.application_processes[u'iTunes'].windows[u'iTunes'].buttons[its.attributes['AXDescription'].value.endswith(u'remote speakers')].title()
+    return (remote_speakers and remote_speakers[0] != k.missing_value)
 
 def turnStereoOn():
     global needsStereoPowerOn
     if not mayUseStereo():
+        if HAVE_XTENSION and XTensionApp().status('Stereo'):
+            XTensionApp().turnoff('Stereo')
         return
     if not XTensionApp().status('Stereo'):
         XTensionApp().turnon('Stereo')
@@ -303,7 +306,7 @@ class StreamVision(NSApplication):
             systemEvents.processes['iTunes'].menu_bars[1]. \
                 menu_bar_items['Window'].menus.menu_items['Zoom'].click()
             return
-        elif frontName in ('X11', 'Emacs'): # preserve C-M-\
+        elif frontName in ('X11', 'XQuartz', 'Emacs'): # preserve C-M-\
             self.unregisterZoomWindowHotKey()
             systemEvents.key_code(42, using=[k.command_down, k.control_down])
             self.registerZoomWindowHotKey()
