@@ -98,7 +98,17 @@ def mayUseStereo():
     if not HAVE_XTENSION:
         return False
     systemEvents = app(id='com.apple.systemEvents')
-    remote_speakers = systemEvents.application_processes[u'iTunes'].windows[u'iTunes'].buttons[its.attributes['AXDescription'].value.endswith(u'remote speakers')].title()
+    iTunesWindow = systemEvents.application_processes[u'iTunes'].windows[u'iTunes']
+    try:
+        remote_speakers = iTunesWindow.buttons[its.attributes['AXDescription'].value.endswith(u'remote speakers')].title()
+    except CommandError:
+        # with iTunes Store visible, the query fails with errAENoSuchObject
+        for button in iTunesWindow.buttons():
+            try:
+                if button.attributes['AXDescription'].value().endswith('remote speakers'):
+                    remote_speakers = [button.title()]
+            except CommandError:
+                pass
     return (remote_speakers and remote_speakers[0] != k.missing_value)
 
 def turnStereoOn():
