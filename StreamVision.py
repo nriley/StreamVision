@@ -107,6 +107,7 @@ def mayUseStereo():
             try:
                 if button.attributes['AXDescription'].value().endswith('remote speakers'):
                     remote_speakers = [button.title()]
+                    break
             except CommandError:
                 pass
     return (remote_speakers and remote_speakers[0] != k.missing_value)
