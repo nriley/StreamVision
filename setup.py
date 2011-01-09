@@ -12,6 +12,7 @@ plist = dict(
     CFBundleIdentifier='net.sabi.StreamVision',
     CFBundleName='StreamVision',
     NSPrincipalClass='StreamVision',
+    LSArchitecturePriority=['i386', 'ppc'],
     LSUIElement=1,
 )
 
