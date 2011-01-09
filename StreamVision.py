@@ -203,7 +203,7 @@ class StreamVision(NSApplication):
             artwork = iTunes.current_track.artworks()
             if artwork:
                 try:
-                    kw['pictImage'] = artwork[0].data()
+                    kw['pictImage'] = artwork[0].data_()
                 except CommandError:
                     pass
         growlNotify(trackName + '  ' +
