@@ -100,7 +100,7 @@ def mayUseStereo():
     systemEvents = app(id='com.apple.systemEvents')
     iTunesWindow = systemEvents.application_processes[u'iTunes'].windows[u'iTunes']
     try:
-        remote_speakers = iTunesWindow.buttons[its.attributes['AXDescription'].value.endswith(u'remote speakers')].title()
+        remote_speakers = iTunesWindow.buttons[its.attributes['AXDescription'].value.endswith(u'AirPlay')].title()
     except CommandError:
         # with iTunes Store visible, the query fails with errAENoSuchObject
         for button in iTunesWindow.buttons():
