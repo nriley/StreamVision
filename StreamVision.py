@@ -105,12 +105,14 @@ def mayUseStereo():
         # with iTunes Store visible, the query fails with errAENoSuchObject
         for button in iTunesWindow.buttons():
             try:
-                if button.attributes['AXDescription'].value().endswith('remote speakers'):
+                if button.attributes['AXDescription'].value().endswith('AirPlay'):
                     remote_speakers = [button.title()]
                     break
             except CommandError:
                 pass
-    return (remote_speakers and remote_speakers[0] != k.missing_value)
+        else:
+            return False # XXX shouldn't get here
+    return remote_speakers and remote_speakers[0] not in (None, k.missing_value)
 
 def turnStereoOn():
     global needsStereoPowerOn
