@@ -48,10 +48,12 @@ def growlNotify(title, description, **kw):
         growlNotify(title, description, **kw)
 
 def radioParadiseURL():
-    # XXX better to use http://www2.radioparadise.com/playlist.xml ?
     session = scrape.Session()
-    session.go('http://www2.radioparadise.com/nowplay_b.php')
-    return session.region.firsttag('a')['href']
+    session.go('http://radioparadise.com/jq_playlist.php')
+    url = session.region.firsttag('a')['href']
+    if not url.startswith('http'):
+    	url = 'http://www.radioparadise.com/rp2-' + url
+	return url
 
 def cleanStreamTitle(title):
     if title == k.missing_value:
