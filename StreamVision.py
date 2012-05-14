@@ -99,19 +99,7 @@ def mayUseStereo():
         return False
     systemEvents = app(id='com.apple.systemEvents')
     iTunesWindow = systemEvents.application_processes[u'iTunes'].windows[u'iTunes']
-    try:
-        remote_speakers = iTunesWindow.buttons[its.attributes['AXDescription'].value.beginswith(u'AirPlay')].title()
-    except CommandError:
-        # with iTunes Store visible, the query fails with errAENoSuchObject
-        for button in iTunesWindow.buttons():
-            try:
-                if button.attributes['AXDescription'].value().endswith('AirPlay'):
-                    remote_speakers = [button.title()]
-                    break
-            except CommandError:
-                pass
-        else:
-            return False # XXX shouldn't get here
+    remote_speakers = iTunesWindow.buttons[its.attributes['AXDescription'].value.beginswith(u'AirPlay')].title()
     return remote_speakers and remote_speakers[0] not in (None, k.missing_value)
 
 def turnStereoOn():
