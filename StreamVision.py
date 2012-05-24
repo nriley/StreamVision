@@ -101,7 +101,11 @@ def mayUseStereo():
         return False
     systemEvents = app(id='com.apple.systemEvents')
     iTunesWindow = systemEvents.application_processes[u'iTunes'].windows[u'iTunes']
-    remote_speakers = iTunesWindow.buttons[its.attributes['AXDescription'].value.beginswith(u'AirPlay')].title()
+    # Can't get AirPlay status with iTunes Mini Player or window on other Space.
+    try:
+        remote_speakers = iTunesWindow.buttons[its.attributes['AXDescription'].value.beginswith(u'AirPlay')].title()
+    except CommandError: # window on another Space?
+        return True
     return remote_speakers and remote_speakers[0] not in (None, k.missing_value)
 
 def turnStereoOn():
