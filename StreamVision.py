@@ -170,8 +170,13 @@ class StreamVision(NSApplication):
         if trackClass != k.property:
             trackName = iTunes.current_track.name()
 
-        if iTunes.player_state() != k.playing:
-            growlNotify('iTunes is not playing.', trackName)
+        try:
+            playerState = iTunes.player_state()
+        except CommandError:
+            playerState = None # probably iTunes quit
+        if playerState != k.playing:
+            if playerState != None:
+                growlNotify('iTunes is not playing.', trackName)
             turnStereoOff()
             return
         turnStereoOn()
