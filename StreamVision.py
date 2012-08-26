@@ -12,6 +12,7 @@ import os
 import struct
 import scrape
 import HotKey
+import tunes # <https://github.com/abarnert/itunesterms>
 
 GROWL_APP_NAME = 'StreamVision'
 NOTIFICATION_TRACK_INFO = 'iTunes Track Info'
@@ -76,7 +77,7 @@ def cleanStreamTrackName(name):
         name = name[0]
     return name
 
-def iTunesApp(): return app(id='com.apple.iTunes')
+def iTunesApp(): return app(id='com.apple.iTunes', terms=tunes)
 def XTensionApp(): return app(creator='SHEx')
 def AmuaApp(): return app('Amua.app')
 
