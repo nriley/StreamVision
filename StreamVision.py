@@ -189,10 +189,15 @@ class StreamVision(NSApplication):
             url = iTunes.current_stream_URL()
             kw = {}
             if url != k.missing_value and url.endswith('.jpg'):
-                response, content = self.http.request(url)
-                if response['content-type'].startswith('image/'):
-                    file(self.imagePath, 'w').write(content)
-                    kw['image_from_location'] = self.imagePath
+                try:
+                    response, content = self.http.request(url)
+                except Exception, e:
+                    import sys
+                    print >> sys.stderr, 'Request for album art failed:', e
+                else:
+                    if response['content-type'].startswith('image/'):
+                        file(self.imagePath, 'w').write(content)
+                        kw['image_from_location'] = self.imagePath
             growlNotify(cleanStreamTitle(iTunes.current_stream_title()),
                         cleanStreamTrackName(trackName), **kw)
             return
