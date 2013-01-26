@@ -112,7 +112,7 @@ def mayUseStereo():
 
 def turnStereoOn():
     global needsStereoPowerOn
-    if not default_output_device_is_airplay() or not mayUseStereo():
+    if not default_output_device_is_airplay() and not mayUseStereo():
         if HAVE_XTENSION and XTensionApp().status('Stereo'):
             XTensionApp().turnoff('Stereo')
         return
