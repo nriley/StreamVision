@@ -7,7 +7,7 @@ from Foundation import NSDistributedNotificationCenter, NSSearchPathForDirectori
 from PyObjCTools import AppHelper
 from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
 from Carbon.Events import cmdKey, shiftKey, controlKey
-from AudioDevice import default_output_device_is_airplay
+from AudioDevice import default_output_device_is_airplay, set_default_output_device_changed_callback
 import httplib2
 import os
 import struct
@@ -364,6 +364,9 @@ class StreamVision(NSApplication):
             print "failed to import HIDRemote (XXX fix - on Intel)"
         except OSError, e:
             print "failed to connect to remote: ", e
+
+        set_default_output_device_changed_callback(turnStereoOn)
+        turnStereoOn()
 
     def sendEvent_(self, theEvent):
         eventType = theEvent.type()
