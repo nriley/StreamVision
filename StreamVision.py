@@ -7,6 +7,7 @@ from Foundation import NSDistributedNotificationCenter, NSSearchPathForDirectori
 from PyObjCTools import AppHelper
 from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
 from Carbon.Events import cmdKey, shiftKey, controlKey
+from AudioDevice import default_output_device_is_airplay
 import httplib2
 import os
 import struct
@@ -111,7 +112,7 @@ def mayUseStereo():
 
 def turnStereoOn():
     global needsStereoPowerOn
-    if not mayUseStereo():
+    if not default_output_device_is_airplay() or not mayUseStereo():
         if HAVE_XTENSION and XTensionApp().status('Stereo'):
             XTensionApp().turnoff('Stereo')
         return
@@ -121,7 +122,7 @@ def turnStereoOn():
 
 def turnStereoOff():
     global needsStereoPowerOn
-    if not mayUseStereo():
+    if default_output_device_is_airplay() or not mayUseStereo():
         return
     if not needsStereoPowerOn and XTensionApp().status('Stereo'):
         XTensionApp().turnoff('Stereo')
