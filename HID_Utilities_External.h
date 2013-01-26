@@ -51,7 +51,7 @@
 /*****************************************************/
 #if !TARGET_RT_MAC_CFM
 #include <IOKit/hid/IOHIDLib.h>
-#endif TARGET_RT_MAC_CFM
+#endif
 
 //#include <IOKit/hid/IOHIDUsageTables.h>
 #if 0   // NOTE: These are now in <IOKit/hid/IOHIDUsageTables.h>
@@ -109,7 +109,7 @@ extern "C" {
 	// Notes: This is a MachO function pointer. If you're using CFM you have to call MachOFunctionPointerForCFMFunctionPointer.
 	typedef void(*IOHIDCallbackFunction) (void* target, unsigned long result, void* refcon, void* sender);
 	typedef void* IOHIDEventStruct;
-#endif TARGET_RT_MAC_CFM
+#endif
 	
 	// Device and Element Interfaces
 	
