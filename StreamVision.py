@@ -39,6 +39,9 @@ def growlRegister():
 
 def growlNotify(title, description, **kw):
     try:
+        if usingStereo:
+            description += '\n(AirPlay)'
+
         growl.notify(
             with_name=NOTIFICATION_TRACK_INFO,
             title=title,
@@ -97,6 +100,7 @@ except:
     pass
 
 needsStereoPowerOn = HAVE_XTENSION
+usingStereo = False
 
 def mayUseStereo():
     if not HAVE_XTENSION:
@@ -110,18 +114,21 @@ def mayUseStereo():
         return True
     return remote_speakers and remote_speakers[0] not in (None, k.missing_value)
 
-def turnStereoOn():
-    global needsStereoPowerOn
+def turnStereoOnOrOff():
+    global needsStereoPowerOn, usingStereo
+    usingStereo = False
     if not default_output_device_is_airplay() and not mayUseStereo():
         if HAVE_XTENSION and XTensionApp().status('Stereo'):
             XTensionApp().turnoff('Stereo')
         return
     if not XTensionApp().status('Stereo'):
         XTensionApp().turnon('Stereo')
+    usingStereo = True
     needsStereoPowerOn = False
 
 def turnStereoOff():
-    global needsStereoPowerOn
+    global needsStereoPowerOn, usingStereo
+    usingStereo = False
     if default_output_device_is_airplay() or not mayUseStereo():
         return
     if not needsStereoPowerOn and XTensionApp().status('Stereo'):
@@ -181,7 +188,7 @@ class StreamVision(NSApplication):
                 growlNotify('iTunes is not playing.', trackName)
             turnStereoOff()
             return
-        turnStereoOn()
+        turnStereoOnOrOff()
         if trackClass == k.URL_track:
             if amuaPlaying():
                 if playerInfo is None: # Amua displays it itself
@@ -219,6 +226,10 @@ class StreamVision(NSApplication):
                     iTunes.current_track.album() + '\n' +
                     iTunes.current_track.artist(),
                     **kw)
+
+    def defaultOutputDeviceChanged(self):
+        turnStereoOnOrOff()
+        self.displayTrackInfo()
 
     def goToSite(self):
         iTunes = iTunesApp()
@@ -284,7 +295,7 @@ class StreamVision(NSApplication):
         if not useStereo:
             return
         if iTunes.player_state() == k.playing:
-            turnStereoOn()
+            turnStereoOnOrOff()
         else:
             turnStereoOff()
 
@@ -365,8 +376,9 @@ class StreamVision(NSApplication):
         except OSError, e:
             print "failed to connect to remote: ", e
 
-        set_default_output_device_changed_callback(turnStereoOn)
-        turnStereoOn()
+        set_default_output_device_changed_callback(
+            self.defaultOutputDeviceChanged)
+        turnStereoOnOrOff()
 
     def sendEvent_(self, theEvent):
         eventType = theEvent.type()
