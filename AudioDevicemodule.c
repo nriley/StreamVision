@@ -1,6 +1,16 @@
 #include "Python.h"
 #include <AudioToolbox/AudioServices.h>
 
+#define FourCC2Str(code) (char[5]){(code >> 24) & 0xFF, (code >> 16) & 0xFF, (code >> 8) & 0xFF, code & 0xFF, 0}
+
+static PyObject *
+OSError_from_HALError(const char *failed_operation, OSStatus err) {
+    // these error codes are actually mnemonic, so display them
+    return PyErr_Format(PyExc_OSError,
+                        "%s failed (%ld - %s)",
+                        failed_operation, (long)err, FourCC2Str(err));
+}
+
 static PyObject *
 AudioDevice_default_output_device_is_airplay(PyObject *self, PyObject *args) {
   AudioObjectPropertyAddress propertyAddress;
@@ -16,9 +26,7 @@ AudioDevice_default_output_device_is_airplay(PyObject *self, PyObject *args) {
                                             &propertyAddress, 0, NULL,
                                             &size, &deviceID);
   if (err != noErr)
-    return PyErr_Format(PyExc_OSError,
-                        "AudioHardwareServiceGetPropertyData failed (%ld)",
-                        (long)err);
+    return OSError_from_HALError("AudioHardwareServiceGetPropertyData", err);
   
   if (deviceID == kAudioDeviceUnknown)
     Py_RETURN_NONE;
@@ -28,15 +36,15 @@ AudioDevice_default_output_device_is_airplay(PyObject *self, PyObject *args) {
   err = AudioObjectGetPropertyData(deviceID,
                                    &propertyAddress, 0, NULL,
                                    &size, &transportType);
+  if (err == kAudioHardwareBadObjectError)
+    Py_RETURN_NONE;
   if (err != noErr)
-    return PyErr_Format(PyExc_OSError,
-                        "AudioObjectGetPropertyData failed (%ld)",
-                        (long)err);
+    return OSError_from_HALError("AudioObjectGetPropertyData", err);
 
   if (transportType == kAudioDeviceTransportTypeAirPlay)
-      Py_RETURN_TRUE;
+    Py_RETURN_TRUE;
   else
-      Py_RETURN_FALSE;
+    Py_RETURN_FALSE;
 }
 
 static PyObject *default_output_device_changed_callback = NULL;
@@ -77,9 +85,7 @@ AudioDevice_set_default_output_device_changed_callback(PyObject *self,
                                          &output_device_changed_listener,
                                          NULL);
     if (err != noErr)
-      return PyErr_Format(PyExc_OSError,
-                          "AudioObjectAddPropertyListener failed (%ld)",
-                          (long)err);
+      return OSError_from_HALError("AudioObjectAddPropertyListener", err);
   } else {
     Py_DECREF(default_output_device_changed_callback);
   }
