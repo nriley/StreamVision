@@ -111,7 +111,7 @@ def mayUseStereo():
     try:
         remote_speakers = iTunesWindow.buttons[its.attributes['AXDescription'].value.beginswith(u'AirPlay')].title()
     except CommandError: # window on another Space?
-        return True
+        return usingStereo
     return remote_speakers and remote_speakers[0] not in (None, k.missing_value)
 
 def turnStereoOnOrOff():
