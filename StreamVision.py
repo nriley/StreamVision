@@ -13,7 +13,6 @@ import os
 import struct
 import scrape
 import HotKey
-import tunes # <https://github.com/abarnert/itunesterms>
 
 GROWL_APP_NAME = 'StreamVision'
 NOTIFICATION_TRACK_INFO = 'iTunes Track Info'
@@ -81,7 +80,7 @@ def cleanStreamTrackName(name):
         name = name[0]
     return name
 
-def iTunesApp(): return app(id='com.apple.iTunes', terms=tunes)
+def iTunesApp(): return app(id='com.apple.iTunes')
 def XTensionApp(): return app(creator='SHEx')
 def AmuaApp(): return app('Amua.app')
 
@@ -105,6 +104,14 @@ usingStereo = False
 def mayUseStereo():
     if not HAVE_XTENSION:
         return False
+    try:
+        # A bit better in iTunes 11.0.3, but can't do this via an Apple
+        # Event descriptor; have to send multiple events
+        iTunes = iTunesApp()
+        return any(d.kind() != k.computer for d in it.current_AirPlay_devices())
+    except AttributeError:
+        pass
+
     systemEvents = app(id='com.apple.systemEvents')
     iTunesWindow = systemEvents.application_processes[u'iTunes'].windows[u'iTunes']
     # Can't get AirPlay status with iTunes Mini Player or window on other Space.
