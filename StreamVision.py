@@ -107,8 +107,8 @@ def mayUseStereo():
     try:
         # A bit better in iTunes 11.0.3, but can't do this via an Apple
         # Event descriptor; have to send multiple events
-        iTunes = iTunesApp()
-        return any(d.kind() != k.computer for d in it.current_AirPlay_devices())
+        return any(d.kind() != k.computer
+                   for d in iTunesApp().current_AirPlay_devices())
     except AttributeError:
         pass
 
