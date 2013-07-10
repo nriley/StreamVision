@@ -1,13 +1,18 @@
 #!/usr/bin/pythonw
 # -*- coding: utf-8 -*-
 
+from aem.ae import newdesc
 from appscript import app, k, its, CommandError
-from AppKit import NSApplication, NSApplicationDefined, NSBeep, NSSystemDefined, NSURL, NSWorkspace
-from Foundation import NSDistributedNotificationCenter, NSSearchPathForDirectoriesInDomains, NSCachesDirectory, NSUserDomainMask
+from AppKit import (NSApplication, NSApplicationDefined, NSBeep, NSImage,
+                    NSSystemDefined, NSURL, NSWorkspace)
+from Foundation import (NSDistributedNotificationCenter,
+                        NSSearchPathForDirectoriesInDomains,
+                        NSCachesDirectory, NSUserDomainMask)
 from PyObjCTools import AppHelper
 from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
 from Carbon.Events import cmdKey, shiftKey, controlKey
-from AudioDevice import default_output_device_is_airplay, set_default_output_device_changed_callback
+from AudioDevice import (default_output_device_is_airplay,
+                         set_default_output_device_changed_callback)
 import httplib2
 import os
 import struct
@@ -40,6 +45,11 @@ def growlNotify(title, description, **kw):
     try:
         if usingStereo:
             description += '\n(AirPlay)'
+
+        if 'image' in kw:
+            image = (NSImage.alloc().initWithData_(buffer(kw['image']))
+                     .TIFFRepresentation())
+            kw['image'] = newdesc('TIFF', image)
 
         growl.notify(
             with_name=NOTIFICATION_TRACK_INFO,
@@ -211,8 +221,7 @@ class StreamVision(NSApplication):
                     print >> sys.stderr, 'Request for album art failed:', e
                 else:
                     if response['content-type'].startswith('image/'):
-                        file(self.imagePath, 'w').write(content)
-                        kw['image_from_location'] = self.imagePath
+                        kw['image'] = content
             growlNotify(cleanStreamTitle(iTunes.current_stream_title()),
                         cleanStreamTrackName(trackName), **kw)
             return
@@ -225,7 +234,7 @@ class StreamVision(NSApplication):
             artwork = iTunes.current_track.artworks()
             if artwork:
                 try:
-                    kw['pictImage'] = artwork[0].data_()
+                    kw['image'] = artwork[0].data_().data
                 except CommandError:
                     pass
         growlNotify(trackName + '  ' +
