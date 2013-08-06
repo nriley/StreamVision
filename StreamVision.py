@@ -15,7 +15,6 @@ from AudioDevice import (default_output_device_is_airplay,
                          set_default_output_device_changed_callback)
 import httplib2
 import os
-import struct
 import scrape
 import HotKey
 
@@ -66,8 +65,8 @@ def radioParadiseURL():
     session.go('http://radioparadise.com/jq_playlist.php')
     url = session.region.firsttag('a')['href']
     if not url.startswith('http'):
-    	url = 'http://www.radioparadise.com/rp2-' + url
-	return url
+        url = 'http://www.radioparadise.com/rp2-' + url
+        return url
 
 def cleanStreamTitle(title):
     if title == k.missing_value:
@@ -318,18 +317,18 @@ class StreamVision(NSApplication):
     def playPauseFront(self):
         systemEvents = app(id='com.apple.systemEvents')
         frontName = systemEvents.processes[its.frontmost == True][1].name()
-	if frontName == 'RealPlayer':
-	    realPlayer = app(id='com.RealNetworks.RealPlayer')
-	    if len(realPlayer.players()) > 0:
-		if realPlayer.players[1].state() == k.playing:
-		    realPlayer.pause()
-		else:
-		    realPlayer.play()
-		return
-	elif frontName == 'VLC':
-	    app(id='org.videolan.vlc').play() # equivalent to playpause
-	else:
-	    self.playPause(useStereo=False)
+        if frontName == 'RealPlayer':
+            realPlayer = app(id='com.RealNetworks.RealPlayer')
+            if len(realPlayer.players()) > 0:
+                if realPlayer.players[1].state() == k.playing:
+                    realPlayer.pause()
+                else:
+                    realPlayer.play()
+                return
+        elif frontName == 'VLC':
+            app(id='org.videolan.vlc').play() # equivalent to playpause
+        else:
+            self.playPause(useStereo=False)
 
     def nextTrack(self):
         if amuaPlaying():
@@ -383,7 +382,10 @@ class StreamVision(NSApplication):
         self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, shiftKey) # shift-F10
         self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
         self.registerZoomWindowHotKey()
-        NSDistributedNotificationCenter.defaultCenter().addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
+
+        distributedNotificationCenter = NSDistributedNotificationCenter.defaultCenter()
+        distributedNotificationCenter.addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
+        distributedNotificationCenter.addObserver_selector_name_object_(self, self.terminate_, 'com.apple.logoutContinued', None)
         try:
             import HIDRemote
             HIDRemote.connect()
