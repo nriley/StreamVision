@@ -120,6 +120,8 @@ def mayUseStereo():
                    for d in iTunesApp().current_AirPlay_devices())
     except AttributeError:
         pass
+    except CommandError: # iTunes 11.1 fails with AirPort Express
+        return True
 
     systemEvents = app(id='com.apple.systemEvents')
     iTunesWindow = systemEvents.application_processes[u'iTunes'].windows[u'iTunes']
