@@ -178,7 +178,7 @@ class OneFileCache(object):
     def delete(self, key):
         if key == self.key:
             self.key = None
-            os.remove(cache)
+            os.remove(self.cache)
 
 class StreamVision(NSApplication):
 
