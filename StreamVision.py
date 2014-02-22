@@ -156,6 +156,47 @@ def amuaPlaying():
         return False
     return AmuaApp().is_playing()
 
+def notifyTrackInfo(name, album=None, artist=None, rating=0, hasArtwork=False,
+                    streamTitle=None, streamURL=None, playing=True, onChange=False):
+    if not playing:
+        growlNotify('iTunes is not playing.', name)
+        return
+    turnStereoOnOrOff()
+
+    if streamURL:
+        if amuaPlaying():
+            if onChange: # Amua displays it itself
+                AmuaApp().display_song_information()
+            return
+        kw = {}
+        if streamURL and streamURL.endswith('.jpg'):
+            try:
+                response, content = http.request(streamURL)
+            except Exception, e:
+                import sys
+                print >> sys.stderr, 'Request for album art failed:', e
+            else:
+                if response['content-type'].startswith('image/'):
+                    kw['image'] = content
+        growlNotify(cleanStreamTitle(streamTitle),
+                    cleanStreamTrackName(name), **kw)
+        return
+
+    if not name:
+        growlNotify('iTunes is playing.', '')
+        return
+
+    kw = {}
+    if hasArtwork:
+        try:
+            kw['image'] = iTunesApp().current_track.artworks[1].data_().data
+        except CommandError:
+            pass
+
+    growlNotify(name + '  ' + u'★' * (rating / 20),
+                (album or '') + '\n' + (artist or ''),
+                **kw)
+
 class OneFileCache(object):
     __slots__ = ('key', 'cache')
 
@@ -183,7 +224,30 @@ class StreamVision(NSApplication):
     hotKeyActions = {}
     hotKeys = []
 
-    def displayTrackInfo(self, playerInfo=None):
+    def playerInfoChanged(self, playerInfo):
+        infoDict = dict(playerInfo.userInfo())
+        trackName = infoDict.get('Name', '')
+        playerState = infoDict.get('Player State')
+        if playerState != 'Playing':
+            notifyTrackInfo(trackName, playing=False, onChange=True)
+            return
+        url = infoDict.get('Stream URL')
+        if url:
+            notifyTrackInfo(trackName, streamTitle=infoDict.get('Stream Title'),
+                            streamURL=url, onChange=True)
+            return
+        artworkCount = int(infoDict.get('Artwork Count', 0))
+        # XXX When starting iTunes Radio station playback, we get 2 notifications,
+        # neither of which mention the track: the first has the station's artwork,
+        # the second doesn't.  On the 2nd notification, wait 10 seconds and try again.
+        # By then, we should have artwork.
+        if not infoDict.has_key('Total Time') and artworkCount == 0:
+            self.performSelector_withObject_afterDelay_(self.displayTrackInfo, None, 10)
+            return
+        notifyTrackInfo(trackName, infoDict.get('Album'), infoDict.get('Artist'),
+                        infoDict.get('Rating', 0), artworkCount > 0, onChange=True)
+
+    def displayTrackInfo(self):
         iTunes = iTunesApp()
 
         try:
@@ -200,47 +264,21 @@ class StreamVision(NSApplication):
         except CommandError:
             playerState = None # probably iTunes quit
         if playerState != k.playing:
-            if playerState != None:
-                growlNotify('iTunes is not playing.', trackName)
-            turnStereoOff()
+            notifyTrackInfo(trackName, playing=False)
             return
-        turnStereoOnOrOff()
         if trackClass == k.URL_track:
-            if amuaPlaying():
-                if playerInfo is None: # Amua displays it itself
-                    AmuaApp().display_song_information()
-                return
             url = iTunes.current_stream_URL()
-            kw = {}
-            if url != k.missing_value and url.endswith('.jpg'):
-                try:
-                    response, content = self.http.request(url)
-                except Exception, e:
-                    import sys
-                    print >> sys.stderr, 'Request for album art failed:', e
-                else:
-                    if response['content-type'].startswith('image/'):
-                        kw['image'] = content
-            growlNotify(cleanStreamTitle(iTunes.current_stream_title()),
-                        cleanStreamTrackName(trackName), **kw)
+            if url == k.missing_value:
+                url = None
+            notifyTrackInfo(trackName, streamTitle=iTunes.current_stream_title(),
+                            streamURL=url)
             return
         if trackClass == k.property:
-            growlNotify('iTunes is playing.', '')
+            notifyTrackInfo(None)
             return
-        kw = {}
-        # XXX iTunes doesn't let you get artwork for shared tracks
-        if trackClass != k.shared_track:
-            artwork = iTunes.current_track.artworks()
-            if artwork:
-                try:
-                    kw['image'] = artwork[0].data_().data
-                except CommandError:
-                    pass
-        growlNotify(trackName + '  ' +
-                    u'★' * (iTunes.current_track.rating() / 20),
-                    iTunes.current_track.album() + '\n' +
-                    iTunes.current_track.artist(),
-                    **kw)
+        # XXX iTunes doesn't let you get artwork for shared tracks (still?)
+        notifyTrackInfo(trackName, iTunes.current_track.album(), iTunes.current_track.artist(),
+                        iTunes.current_track.rating(), trackClass != k.shared_track)
 
     def defaultOutputDeviceChanged(self):
         turnStereoOnOrOff()
@@ -366,12 +404,14 @@ class StreamVision(NSApplication):
                 buttons[its.subrole == 'AXZoomButton'].buttons[1].click()
 
     def finishLaunching(self):
+        global http
+
         super(StreamVision, self).finishLaunching()
 
         caches = NSSearchPathForDirectoriesInDomains(NSCachesDirectory,
                                                      NSUserDomainMask, True)[0]
         cache = os.path.join(caches, 'StreamVision')
-        self.http = httplib2.Http(OneFileCache(cache), 5)
+        http = httplib2.Http(OneFileCache(cache), 5)
         self.imagePath = os.path.join(cache, 'image')
 
         self.registerHotKey(self.displayTrackInfo, 100) # F8
@@ -384,7 +424,7 @@ class StreamVision(NSApplication):
         self.registerZoomWindowHotKey()
 
         distributedNotificationCenter = NSDistributedNotificationCenter.defaultCenter()
-        distributedNotificationCenter.addObserver_selector_name_object_(self, self.displayTrackInfo, 'com.apple.iTunes.playerInfo', None)
+        distributedNotificationCenter.addObserver_selector_name_object_(self, self.playerInfoChanged, 'com.apple.iTunes.playerInfo', None)
         distributedNotificationCenter.addObserver_selector_name_object_(self, self.terminate_, 'com.apple.logoutContinued', None)
         try:
             import HIDRemote
