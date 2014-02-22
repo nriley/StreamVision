@@ -25,10 +25,6 @@ NOTIFICATIONS_ALL = [NOTIFICATION_TRACK_INFO]
 kEventHotKeyPressedSubtype = 6
 kEventHotKeyReleasedSubtype = 9
 
-kHIDUsage_Csmr_ScanNextTrack = 0xB5
-kHIDUsage_Csmr_ScanPreviousTrack = 0xB6
-kHIDUsage_Csmr_PlayOrPause = 0xCD
-
 def growlRegister():
     global growl
     growl = app(id='com.Growl.GrowlHelperApp')
@@ -362,13 +358,6 @@ class StreamVision(NSApplication):
         distributedNotificationCenter = NSDistributedNotificationCenter.defaultCenter()
         distributedNotificationCenter.addObserver_selector_name_object_(self, self.playerInfoChanged, 'com.apple.iTunes.playerInfo', None)
         distributedNotificationCenter.addObserver_selector_name_object_(self, self.terminate_, 'com.apple.logoutContinued', None)
-        try:
-            import HIDRemote
-            HIDRemote.connect()
-        except ImportError:
-            print "failed to import HIDRemote (XXX fix - on Intel)"
-        except OSError, e:
-            print "failed to connect to remote: ", e
 
         set_default_output_device_changed_callback(
             self.defaultOutputDeviceChanged)
@@ -379,20 +368,8 @@ class StreamVision(NSApplication):
         if eventType == NSSystemDefined and \
                theEvent.subtype() == kEventHotKeyPressedSubtype:
             self.hotKeyActions[theEvent.data1()]()
-        elif eventType == NSApplicationDefined:
-            key = theEvent.data1()
-            if key == kHIDUsage_Csmr_ScanNextTrack:
-                self.nextTrack()
-            elif key == kHIDUsage_Csmr_ScanPreviousTrack:
-                iTunesApp().previous_track()
-            elif key == kHIDUsage_Csmr_PlayOrPause:
-                self.playPauseFront()
         super(StreamVision, self).sendEvent_(theEvent)
 
 if __name__ == "__main__":
     growlRegister()
     AppHelper.runEventLoop()
-    try:
-        HIDRemote.disconnect()
-    except:
-        pass
