@@ -91,19 +91,11 @@ def cleanStreamTrackName(name):
 
 def iTunesApp(): return app(id='com.apple.iTunes')
 def XTensionApp(): return app(creator='SHEx')
-def AmuaApp(): return app('Amua.app')
 
 HAVE_XTENSION = False
 try:
     XTensionApp()
     HAVE_XTENSION = True
-except:
-    pass
-
-HAVE_AMUA = False
-try:
-    AmuaApp()
-    HAVE_AMUA = True
 except:
     pass
 
@@ -151,11 +143,6 @@ def turnStereoOff():
         XTensionApp().turnoff('Stereo')
     needsStereoPowerOn = True
 
-def amuaPlaying():
-    if not HAVE_AMUA:
-        return False
-    return AmuaApp().is_playing()
-
 def notifyTrackInfo(name, album=None, artist=None, rating=0, hasArtwork=False,
                     streamTitle=None, streamURL=None, playing=True, onChange=False):
     if not playing:
@@ -164,10 +151,6 @@ def notifyTrackInfo(name, album=None, artist=None, rating=0, hasArtwork=False,
     turnStereoOnOrOff()
 
     if streamURL:
-        if amuaPlaying():
-            if onChange: # Amua displays it itself
-                AmuaApp().display_song_information()
-            return
         kw = {}
         if streamURL and streamURL.endswith('.jpg'):
             try:
@@ -287,9 +270,6 @@ class StreamVision(NSApplication):
     def goToSite(self):
         iTunes = iTunesApp()
         if iTunes.player_state() == k.playing:
-            if amuaPlaying():
-                AmuaApp().display_album_details()
-                return
             url = iTunes.current_stream_URL()
             if url != k.missing_value:
                 if 'radioparadise.com' in url and 'review' not in url:
@@ -312,14 +292,6 @@ class StreamVision(NSApplication):
 
     def incrementRatingBy(self, increment):
         iTunes = iTunesApp()
-        if amuaPlaying():
-            if increment < 0:
-                AmuaApp().ban_song()
-                growlNotify('Banned song.', '', icon_of_application='Amua.app')
-            else:
-                AmuaApp().love_song()
-                growlNotify('Loved song.', '', icon_of_application='Amua.app')
-            return
         rating = iTunes.current_track.rating()
         rating += increment
         if rating < 0:
@@ -337,10 +309,7 @@ class StreamVision(NSApplication):
         was_playing = (iTunes.player_state() == k.playing)
         if not useStereo:
             needsStereoPowerOn = False
-        if was_playing and amuaPlaying():
-            AmuaApp().stop()
-        else:
-            iTunes.playpause()
+        iTunes.playpause()
         if not was_playing and iTunes.player_state() == k.stopped:
             # most likely, we're focused on the iPod, so playing does nothing
             iTunes.browser_windows[1].view.set(iTunes.user_playlists[its.name=='Stations'][1]())
@@ -369,9 +338,6 @@ class StreamVision(NSApplication):
             self.playPause(useStereo=False)
 
     def nextTrack(self):
-        if amuaPlaying():
-            AmuaApp().skip_song()
-            return
         iTunesApp().next_track()
 
     def finishLaunching(self):
