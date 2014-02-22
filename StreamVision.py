@@ -10,7 +10,7 @@ from Foundation import (NSDistributedNotificationCenter,
                         NSCachesDirectory, NSUserDomainMask)
 from PyObjCTools import AppHelper
 from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
-from Carbon.Events import cmdKey, shiftKey, controlKey
+from Carbon.Events import cmdKey, shiftKey
 from AudioDevice import (default_output_device_is_airplay,
                          set_default_output_device_changed_callback)
 import httplib2
@@ -374,35 +374,6 @@ class StreamVision(NSApplication):
             return
         iTunesApp().next_track()
 
-    def registerZoomWindowHotKey(self):
-        self.zoomWindowHotKey = self.registerHotKey(self.zoomWindow, 42, cmdKey | controlKey) # cmd-ctrl-\
-
-    def unregisterZoomWindowHotKey(self):
-        self.unregisterHotKey(self.zoomWindowHotKey)
-        self.zoomWindowHotKey = None
-
-    def zoomWindow(self):
-        # XXX detect if "enable access for assistive devices" needs to be enabled
-        systemEvents = app(id='com.apple.systemEvents')
-        frontName = systemEvents.processes[its.frontmost == True][1].name()
-        if frontName == 'iTunes':
-            systemEvents.processes['iTunes'].menu_bars[1]. \
-                menu_bar_items['Window'].menus.menu_items['Zoom'].click()
-            return
-        elif frontName in ('X11', 'XQuartz', 'Emacs'): # preserve C-M-\
-            self.unregisterZoomWindowHotKey()
-            systemEvents.key_code(42, using=[k.command_down, k.control_down])
-            self.registerZoomWindowHotKey()
-            return
-        frontPID = systemEvents.processes[its.frontmost == True][1].unix_id()
-        try:
-            zoomed = app(pid=frontPID).windows[1].zoomed
-            zoomed.set(not zoomed())
-        except (CommandError, RuntimeError):
-            systemEvents.processes[frontName].windows \
-                [its.subrole == 'AXStandardWindow'].windows[1]. \
-                buttons[its.subrole == 'AXZoomButton'].buttons[1].click()
-
     def finishLaunching(self):
         global http
 
@@ -421,7 +392,6 @@ class StreamVision(NSApplication):
         self.registerHotKey(self.nextTrack, 103) # F11
         self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, shiftKey) # shift-F10
         self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
-        self.registerZoomWindowHotKey()
 
         distributedNotificationCenter = NSDistributedNotificationCenter.defaultCenter()
         distributedNotificationCenter.addObserver_selector_name_object_(self, self.playerInfoChanged, 'com.apple.iTunes.playerInfo', None)
