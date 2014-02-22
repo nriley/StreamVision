@@ -11,10 +11,6 @@ OSError_from_HALError(const char *failed_operation, OSStatus err) {
                         failed_operation, (long)err, FourCC2Str(err));
 }
 
-#ifndef kAudioDeviceTransportTypeAirPlay
-enum { kAudioDeviceTransportTypeAirPlay = 'airp' }; /* 10.8+ */
-#endif
-
 static PyObject *
 AudioDevice_default_output_device_is_airplay(PyObject *self, PyObject *args) {
   AudioObjectPropertyAddress propertyAddress;

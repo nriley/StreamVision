@@ -12,7 +12,7 @@ plist = dict(
     CFBundleIdentifier='net.sabi.StreamVision',
     CFBundleName='StreamVision',
     NSPrincipalClass='StreamVision',
-    LSArchitecturePriority=['i386', 'ppc'],
+    LSArchitecturePriority=['i386'],
     LSUIElement=1,
 )
 
@@ -23,12 +23,7 @@ setup(
                            extra_link_args=['-framework', 'Carbon']),
                  Extension('AudioDevice',
                            sources=['AudioDevicemodule.c'],
-                           extra_link_args=['-framework', 'AudioToolbox']),
-                 Extension('HIDRemote',
-                           sources=['HIDRemotemodule.m'],
-                           extra_link_args=['-framework', 'Cocoa',
-                                            '-framework', 'IOKit',
-                                            'libHIDUtilities.a'])],
+                           extra_link_args=['-framework', 'AudioToolbox'])],
     data_files=["English.lproj"],
     options=dict(py2app=dict(plist=plist)),
 )
