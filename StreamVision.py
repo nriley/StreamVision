@@ -356,4 +356,4 @@ class StreamVision(NSApplication):
 
 if __name__ == "__main__":
     growlRegister()
-    AppHelper.runEventLoop()
+    AppHelper.runEventLoop(installInterrupt=True)
