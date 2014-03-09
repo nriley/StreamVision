@@ -317,22 +317,6 @@ class StreamVision(NSApplication):
         else:
             turnStereoOff()
 
-    def playPauseFront(self):
-        systemEvents = app(id='com.apple.systemEvents')
-        frontName = systemEvents.processes[its.frontmost == True][1].name()
-        if frontName == 'RealPlayer':
-            realPlayer = app(id='com.RealNetworks.RealPlayer')
-            if len(realPlayer.players()) > 0:
-                if realPlayer.players[1].state() == k.playing:
-                    realPlayer.pause()
-                else:
-                    realPlayer.play()
-                return
-        elif frontName == 'VLC':
-            app(id='org.videolan.vlc').play() # equivalent to playpause
-        else:
-            self.playPause(useStereo=False)
-
     def nextTrack(self):
         iTunesApp().next_track()
 
