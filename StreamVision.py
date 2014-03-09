@@ -85,6 +85,7 @@ def cleanStreamTrackName(name):
         name = name[0]
     return name
 
+def HermesApp(): return app(id='com.alexcrichton.Hermes')
 def iTunesApp(): return app(id='com.apple.iTunes')
 def XTensionApp(): return app(creator='SHEx')
 
@@ -300,6 +301,11 @@ class StreamVision(NSApplication):
 
     def playPause(self, useStereo=True):
         global needsStereoPowerOn
+
+        Hermes = HermesApp()
+        if Hermes.isrunning():
+            Hermes.playpause()
+            return
 
         iTunes = iTunesApp()
         was_playing = (iTunes.player_state() == k.playing)
