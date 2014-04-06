@@ -324,6 +324,11 @@ class StreamVision(NSApplication):
             turnStereoOff()
 
     def nextTrack(self):
+        Hermes = HermesApp()
+        if Hermes.isrunning():
+            Hermes.next_song()
+            return
+
         iTunesApp().next_track()
 
     def finishLaunching(self):
