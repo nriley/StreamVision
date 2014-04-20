@@ -50,6 +50,7 @@ def growlNotify(title, description, **kw):
             with_name=NOTIFICATION_TRACK_INFO,
             title=title,
             description=description,
+            identifier='StreamVision notification',
             application_name=GROWL_APP_NAME,
             **kw)
     except CommandError:
