@@ -160,7 +160,7 @@ def imageAtURL(url):
                 return content
 
 def notifyTrackInfo(name, album=None, artist=None, rating=0, artwork=False,
-                    streamTitle=None, streamURL=None, playing=True, onChange=False):
+                    streamTitle=None, streamURL=None, playing=True):
     if not playing:
         growlNotify('iTunes is not playing.', name)
         return
@@ -224,12 +224,12 @@ class StreamVision(NSApplication):
         trackName = infoDict.get('Name', '')
         playerState = infoDict.get('Player State')
         if playerState != 'Playing':
-            notifyTrackInfo(trackName, playing=False, onChange=True)
+            notifyTrackInfo(trackName, playing=False)
             return
         url = infoDict.get('Stream URL')
         if url:
             notifyTrackInfo(trackName, streamTitle=infoDict.get('Stream Title'),
-                            streamURL=url, onChange=True)
+                            streamURL=url)
             return
         artworkCount = int(infoDict.get('Artwork Count', 0))
         # XXX When starting iTunes Radio station playback, we get 2 notifications,
@@ -240,7 +240,7 @@ class StreamVision(NSApplication):
             self.performSelector_withObject_afterDelay_(self.displayTrackInfo, None, 10)
             return
         notifyTrackInfo(trackName, infoDict.get('Album'), infoDict.get('Artist'),
-                        infoDict.get('Rating', 0), artworkCount > 0, onChange=True)
+                        infoDict.get('Rating', 0), artworkCount > 0)
 
     def displayTrackInfo(self):
         Hermes = hermesPlaying()
