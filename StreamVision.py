@@ -100,8 +100,15 @@ except:
 needsStereoPowerOn = HAVE_XTENSION
 usingStereo = False
 
+def hermesPlaying():
+    Hermes = HermesApp()
+    if Hermes.isrunning() and Hermes.playback_state() == k.playing:
+        return Hermes
+
 def mayUseStereo():
     if not HAVE_XTENSION:
+        return False
+    if hermesPlaying():
         return False
     try:
         # A bit better in iTunes 11.0.3, but can't do this via an Apple
@@ -141,7 +148,18 @@ def turnStereoOff():
         XTensionApp().turnoff('Stereo')
     needsStereoPowerOn = True
 
-def notifyTrackInfo(name, album=None, artist=None, rating=0, hasArtwork=False,
+def imageAtURL(url):
+    if url and url.endswith('.jpg'):
+        try:
+            response, content = http.request(url)
+        except Exception, e:
+            import sys
+            print >> sys.stderr, 'Request for album art failed:', e
+        else:
+            if response['content-type'].startswith('image/'):
+                return content
+
+def notifyTrackInfo(name, album=None, artist=None, rating=0, artwork=False,
                     streamTitle=None, streamURL=None, playing=True, onChange=False):
     if not playing:
         growlNotify('iTunes is not playing.', name)
@@ -150,15 +168,9 @@ def notifyTrackInfo(name, album=None, artist=None, rating=0, hasArtwork=False,
 
     if streamURL:
         kw = {}
-        if streamURL and streamURL.endswith('.jpg'):
-            try:
-                response, content = http.request(streamURL)
-            except Exception, e:
-                import sys
-                print >> sys.stderr, 'Request for album art failed:', e
-            else:
-                if response['content-type'].startswith('image/'):
-                    kw['image'] = content
+        image = imageAtURL(streamURL)
+        if image:
+            kw['image'] = image
         growlNotify(cleanStreamTitle(streamTitle),
                     cleanStreamTrackName(name), **kw)
         return
@@ -168,11 +180,13 @@ def notifyTrackInfo(name, album=None, artist=None, rating=0, hasArtwork=False,
         return
 
     kw = {}
-    if hasArtwork:
+    if artwork is True:
         try:
             kw['image'] = iTunesApp().current_track.artworks[1].data_().data
         except CommandError:
             pass
+    elif artwork:
+        kw['image'] = artwork
 
     growlNotify(name + '  ' + u'★' * (rating / 20),
                 (album or '') + '\n' + (artist or ''),
@@ -229,6 +243,13 @@ class StreamVision(NSApplication):
                         infoDict.get('Rating', 0), artworkCount > 0, onChange=True)
 
     def displayTrackInfo(self):
+        Hermes = hermesPlaying()
+        if Hermes:
+            infoDict = Hermes.current_song.properties()
+            notifyTrackInfo(infoDict[k.title], infoDict[k.album], infoDict[k.artist],
+                            infoDict[k.nrating], imageAtURL(infoDict[k.art]))
+            return
+
         iTunes = iTunesApp()
 
         try:
