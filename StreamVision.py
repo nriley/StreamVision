@@ -242,6 +242,10 @@ class StreamVision(NSApplication):
         notifyTrackInfo(trackName, infoDict.get('Album'), infoDict.get('Artist'),
                         infoDict.get('Rating', 0), artworkCount > 0)
 
+    def requestedDisplayTrackInfo(self):
+        growlNotify('Requesting track information...', '')
+        self.displayTrackInfo()
+
     def displayTrackInfo(self):
         Hermes = hermesPlaying()
         if Hermes:
@@ -292,6 +296,7 @@ class StreamVision(NSApplication):
             url = iTunes.current_stream_URL()
             if url != k.missing_value:
                 if 'radioparadise.com' in url and 'review' not in url:
+                    growlNotify('Looking up Radio Paradise song...', '')
                     url = radioParadiseURL()
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
                 return
@@ -364,7 +369,7 @@ class StreamVision(NSApplication):
         http = httplib2.Http(OneFileCache(cache), 5)
         self.imagePath = os.path.join(cache, 'image')
 
-        self.registerHotKey(self.displayTrackInfo, 100) # F8
+        self.registerHotKey(self.requestedDisplayTrackInfo, 100) # F8
         self.registerHotKey(self.goToSite, 100, cmdKey) # cmd-F8
         self.registerHotKey(self.playPause, 101) # F9
         self.registerHotKey(lambda: iTunesApp().previous_track(), 109) # F10
