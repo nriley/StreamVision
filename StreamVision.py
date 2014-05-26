@@ -4,7 +4,9 @@
 from aem.ae import newdesc
 from appscript import app, k, its, CommandError
 from AppKit import (NSApplication, NSApplicationDefined, NSBeep, NSImage,
-                    NSSystemDefined, NSURL, NSWorkspace)
+                    NSSystemDefined, NSURL, NSWorkspace,
+                    NSWorkspaceApplicationKey,
+                    NSWorkspaceDidActivateApplicationNotification)
 from Foundation import (NSDistributedNotificationCenter,
                         NSSearchPathForDirectoriesInDomains,
                         NSCachesDirectory, NSUserDomainMask)
@@ -217,7 +219,8 @@ class OneFileCache(object):
 class StreamVision(NSApplication):
 
     hotKeyActions = {}
-    hotKeys = []
+    hotKeysActive = {}
+    hotKeysSuspended = []
 
     def playerInfoChanged(self, playerInfo):
         infoDict = dict(playerInfo.userInfo())
@@ -305,14 +308,31 @@ class StreamVision(NSApplication):
     def registerHotKey(self, func, keyCode, mods=0):
         hotKeyRef = RegisterEventHotKey(keyCode, mods, (0, 0),
                                         GetApplicationEventTarget(), 0)
-        self.hotKeys.append(hotKeyRef)
+        self.hotKeysActive[hotKeyRef] = (func, keyCode, mods)
         self.hotKeyActions[HotKey.HotKeyAddress(hotKeyRef)] = func
         return hotKeyRef
 
     def unregisterHotKey(self, hotKeyRef):
-        self.hotKeys.remove(hotKeyRef)
+        del self.hotKeysActive[hotKeyRef]
         del self.hotKeyActions[HotKey.HotKeyAddress(hotKeyRef)]
         hotKeyRef.UnregisterEventHotKey()
+
+    def suspendHotKeys(self):
+        for hotKeyRef, hotKeyParams in self.hotKeysActive.items():
+            self.unregisterHotKey(hotKeyRef)
+            self.hotKeysSuspended.append(hotKeyParams)
+
+    def resumeHotKeys(self):
+        for hotKeyParams in self.hotKeysSuspended:
+            self.registerHotKey(*hotKeyParams)
+        self.hotKeysSuspended = []
+
+    def applicationDidActivate(self, notification):
+        application = notification.userInfo()[NSWorkspaceApplicationKey]
+        if application and application.bundleIdentifier() == 'com.citrix.XenAppViewer':
+            self.suspendHotKeys()
+        else:
+            self.resumeHotKeys()
 
     def incrementRatingBy(self, increment):
         iTunes = iTunesApp()
@@ -376,6 +396,9 @@ class StreamVision(NSApplication):
         self.registerHotKey(self.nextTrack, 103) # F11
         self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, shiftKey) # shift-F10
         self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
+
+        workspaceNotificationCenter = NSWorkspace.sharedWorkspace().notificationCenter()
+        workspaceNotificationCenter.addObserver_selector_name_object_(self, self.applicationDidActivate, NSWorkspaceDidActivateApplicationNotification, None)
 
         distributedNotificationCenter = NSDistributedNotificationCenter.defaultCenter()
         distributedNotificationCenter.addObserver_selector_name_object_(self, self.playerInfoChanged, 'com.apple.iTunes.playerInfo', None)
