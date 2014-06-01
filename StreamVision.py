@@ -253,8 +253,9 @@ class StreamVision(NSApplication):
         Hermes = hermesPlaying()
         if Hermes:
             infoDict = Hermes.current_song.properties()
-            notifyTrackInfo(infoDict[k.title], infoDict[k.album], infoDict[k.artist],
-                            infoDict[k.nrating], imageAtURL(infoDict[k.art]))
+            notifyTrackInfo(infoDict[k.title], infoDict[k.album],
+                            infoDict[k.artist], infoDict[k.rating],
+                            imageAtURL(infoDict[k.artwork_URL]))
             return
 
         iTunes = iTunesApp()
