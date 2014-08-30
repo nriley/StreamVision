@@ -90,6 +90,7 @@ def cleanStreamTrackName(name):
 
 def HermesApp(): return app(id='com.alexcrichton.Hermes')
 def iTunesApp(): return app(id='com.apple.iTunes')
+def RdioApp(): return app(id='com.rdio.desktop')
 def XTensionApp(): return app(creator='SHEx')
 
 HAVE_XTENSION = False
@@ -107,10 +108,15 @@ def hermesPlaying():
     if Hermes.isrunning() and Hermes.playback_state() == k.playing:
         return Hermes
 
+def rdioPlaying():
+    Rdio = RdioApp()
+    if Rdio.isrunning() and Rdio.player_state() == k.playing:
+        return Rdio
+
 def mayUseStereo():
     if not HAVE_XTENSION:
         return False
-    if hermesPlaying():
+    if hermesPlaying() or rdioPlaying():
         return False
     try:
         # A bit better in iTunes 11.0.3, but can't do this via an Apple
@@ -258,6 +264,14 @@ class StreamVision(NSApplication):
                             imageAtURL(infoDict[k.artwork_URL]))
             return
 
+        Rdio = rdioPlaying()
+        if Rdio:
+            infoDict = Rdio.current_track.properties()
+            notifyTrackInfo(infoDict[k.name], infoDict[k.album],
+                            infoDict[k.artist],
+                            artwork=infoDict[k.artwork].data)
+            return
+
         iTunes = iTunesApp()
 
         try:
@@ -350,10 +364,11 @@ class StreamVision(NSApplication):
     def playPause(self, useStereo=True):
         global needsStereoPowerOn
 
-        Hermes = HermesApp()
-        if Hermes.isrunning():
-            Hermes.playpause()
-            return
+        # if Hermes or Rdio is open, assume we're using it
+        for player in HermesApp(), RdioApp():
+            if player.isrunning():
+                player.playpause()
+                return
 
         iTunes = iTunesApp()
         was_playing = (iTunes.player_state() == k.playing)
