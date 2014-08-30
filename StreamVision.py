@@ -309,6 +309,11 @@ class StreamVision(NSApplication):
         self.displayTrackInfo()
 
     def goToSite(self):
+        for playerPlaying in hermesPlaying(), rdioPlaying():
+            if playerPlaying:
+                playerPlaying.activate()
+                return
+
         iTunes = iTunesApp()
         if iTunes.player_state() == k.playing:
             url = iTunes.current_stream_URL()
