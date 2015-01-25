@@ -392,12 +392,25 @@ class StreamVision(NSApplication):
             turnStereoOff()
 
     def nextTrack(self):
-        Hermes = HermesApp()
-        if Hermes.isrunning():
+        Rdio = rdioPlaying()
+        if Rdio:
+            Rdio.next_track()
+            return
+
+        Hermes = hermesPlaying()
+        if Hermes:
             Hermes.next_song()
             return
 
         iTunesApp().next_track()
+
+    def previousTrack(self):
+        Rdio = rdioPlaying()
+        if Rdio:
+            Rdio.previous_track()
+            return
+
+        iTunesApp().previous_track()
 
     def finishLaunching(self):
         global http
@@ -413,7 +426,7 @@ class StreamVision(NSApplication):
         self.registerHotKey(self.requestedDisplayTrackInfo, 100) # F8
         self.registerHotKey(self.goToSite, 100, cmdKey) # cmd-F8
         self.registerHotKey(self.playPause, 101) # F9
-        self.registerHotKey(lambda: iTunesApp().previous_track(), 109) # F10
+        self.registerHotKey(self.previousTrack, 109) # F10
         self.registerHotKey(self.nextTrack, 103) # F11
         self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, shiftKey) # shift-F10
         self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
