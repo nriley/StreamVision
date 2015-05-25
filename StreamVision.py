@@ -445,12 +445,12 @@ class StreamVision(NSApplication):
         self.registerHotKey(self.requestedDisplayTrackInfo, 100) # F8
         self.registerHotKey(self.goToSite, 100, cmdKey) # cmd-F8
         self.registerHotKey(self.playPause, 101) # F9
-        self.registerHotKey(self.previousTrack, 109) # F10
-        self.registerHotKey(self.nextTrack, 103) # F11
-        self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, shiftKey) # shift-F10
-        self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
-        self.registerHotKey(lambda: self.adjustVolumeBy(-10), 109, cmdKey) # cmd-F10
-        self.registerHotKey(lambda: self.adjustVolumeBy(10), 103, cmdKey) # cmd-F11
+        self.registerHotKey(self.previousTrack, 103) # F11
+        self.registerHotKey(self.nextTrack, 111) # F12
+        self.registerHotKey(lambda: self.incrementRatingBy(-20), 103, shiftKey) # shift-F11
+        self.registerHotKey(lambda: self.incrementRatingBy(20), 111, shiftKey) # shift-F12
+        self.registerHotKey(lambda: self.adjustVolumeBy(-10), 103, cmdKey) # cmd-F11
+        self.registerHotKey(lambda: self.adjustVolumeBy(10), 111, cmdKey) # cmd-F12
 
         workspaceNotificationCenter = NSWorkspace.sharedWorkspace().notificationCenter()
         workspaceNotificationCenter.addObserver_selector_name_object_(self, self.applicationDidActivate, NSWorkspaceDidActivateApplicationNotification, None)
