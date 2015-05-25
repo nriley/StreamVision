@@ -38,7 +38,7 @@ def growlRegister():
         icon_of_application='iTunes.app')
         # if we leave off the .app, we can get Classic iTunes's icon
 
-def growlNotify(title, description, **kw):
+def growlNotify(title, description='', **kw):
     try:
         if usingStereo:
             description += '\n(AirPlay)'
@@ -184,7 +184,7 @@ def notifyTrackInfo(name, album=None, artist=None, rating=0, artwork=False,
         return
 
     if not name:
-        growlNotify('iTunes is playing.', '')
+        growlNotify('iTunes is playing.')
         return
 
     kw = {}
@@ -252,7 +252,7 @@ class StreamVision(NSApplication):
                         infoDict.get('Rating', 0), artworkCount > 0)
 
     def requestedDisplayTrackInfo(self):
-        growlNotify('Requesting track information...', '')
+        growlNotify('Requesting track information...')
         self.displayTrackInfo()
 
     def displayTrackInfo(self):
@@ -319,7 +319,7 @@ class StreamVision(NSApplication):
             url = iTunes.current_stream_URL()
             if url != k.missing_value:
                 if 'radioparadise.com' in url and 'review' not in url:
-                    growlNotify('Looking up Radio Paradise song...', '')
+                    growlNotify('Looking up Radio Paradise song...')
                     url = radioParadiseURL()
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
                 return
