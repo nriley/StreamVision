@@ -366,6 +366,25 @@ class StreamVision(NSApplication):
             NSBeep()
         iTunes.current_track.rating.set(rating)
 
+    def adjustVolumeBy(self, increment):
+        Hermes = hermesPlaying()
+        if Hermes:
+            if increment > 0: Hermes.increase_volume()
+            else: Hermes.decrease_volume()
+            return
+
+        for player in rdioPlaying(), iTunesApp():
+            if player is None:
+                continue
+            volume = player.sound_volume() + increment
+            if volume < 0: volume = 0
+            elif volume > 100: volume = 100
+            player.sound_volume.set(volume)
+            volumeIn10 = volume // 10
+            growlNotify('Volume ' + (u'▸' * volumeIn10) + (u'▹' * (10 - volumeIn10)),
+                icon_of_application=player.AS_appdata.identifier)
+            return
+
     def playPause(self, useStereo=True):
         global needsStereoPowerOn
 
@@ -430,6 +449,8 @@ class StreamVision(NSApplication):
         self.registerHotKey(self.nextTrack, 103) # F11
         self.registerHotKey(lambda: self.incrementRatingBy(-20), 109, shiftKey) # shift-F10
         self.registerHotKey(lambda: self.incrementRatingBy(20), 103, shiftKey) # shift-F11
+        self.registerHotKey(lambda: self.adjustVolumeBy(-10), 109, cmdKey) # cmd-F10
+        self.registerHotKey(lambda: self.adjustVolumeBy(10), 103, cmdKey) # cmd-F11
 
         workspaceNotificationCenter = NSWorkspace.sharedWorkspace().notificationCenter()
         workspaceNotificationCenter.addObserver_selector_name_object_(self, self.applicationDidActivate, NSWorkspaceDidActivateApplicationNotification, None)
