@@ -295,6 +295,14 @@ class StreamVision(NSApplication):
                                     infoDict.get('Rating', 0), artwork]
         notifyTrackInfo(*self.iTunesLastTrackInfo)
 
+    def rdioPlayStateChanged(self):
+        Rdio = rdioPlaying()
+        if Rdio:
+            self.displayTrackInfo()
+        else:
+            growlNotify('Rdio is not playing.',
+                        icon_of_application=RdioApp().AS_appdata.identifier)
+
     def requestedDisplayTrackInfo(self):
         growlNotify('Requesting track information...')
         self.displayTrackInfo()
@@ -503,6 +511,8 @@ class StreamVision(NSApplication):
 
         distributedNotificationCenter = NSDistributedNotificationCenter.defaultCenter()
         distributedNotificationCenter.addObserver_selector_name_object_(self, self.playerInfoChanged, 'com.apple.iTunes.playerInfo', None)
+        # if you use this, disable Rdio's own "Now Playing" Growl notification
+        distributedNotificationCenter.addObserver_selector_name_object_(self, self.rdioPlayStateChanged, 'com.rdio.desktop.playStateChanged', None)
         distributedNotificationCenter.addObserver_selector_name_object_(self, self.terminate_, 'com.apple.logoutContinued', None)
 
         set_default_output_device_changed_callback(
