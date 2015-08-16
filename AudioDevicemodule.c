@@ -22,11 +22,11 @@ AudioDevice_default_output_device_is_airplay(PyObject *self, PyObject *args) {
   UInt32 size = sizeof(deviceID);
   OSStatus err;
   
-  err = AudioHardwareServiceGetPropertyData(kAudioObjectSystemObject,
-                                            &propertyAddress, 0, NULL,
-                                            &size, &deviceID);
+  err = AudioObjectGetPropertyData(kAudioObjectSystemObject,
+                                   &propertyAddress, 0, NULL,
+                                   &size, &deviceID);
   if (err != noErr)
-    return OSError_from_HALError("AudioHardwareServiceGetPropertyData", err);
+    return OSError_from_HALError("AudioObjectGetPropertyData", err);
   
   if (deviceID == kAudioDeviceUnknown)
     Py_RETURN_NONE;
