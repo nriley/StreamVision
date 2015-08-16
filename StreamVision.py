@@ -16,8 +16,12 @@ from Carbon.Events import cmdKey, shiftKey
 from AudioDevice import (default_output_device_is_airplay,
                          set_default_output_device_changed_callback)
 import httplib2
+import json
 import os
 import scrape
+import sys
+import urllib
+import urlparse
 import HotKey
 
 GROWL_APP_NAME = 'StreamVision'
@@ -161,11 +165,48 @@ def imageAtURL(url):
         try:
             response, content = http.request(url)
         except Exception, e:
-            import sys
-            print >> sys.stderr, 'Request for album art failed:', e
+            print >> sys.stderr, 'Request for album art from', url, 'failed:', e
         else:
             if response['content-type'].startswith('image/'):
                 return content
+
+def itmsAlbumArtwork(itmsURL):
+    try:
+        itmsURL = urlparse.urlparse(itmsURL)
+        query = urlparse.parse_qs(itmsURL.query)
+        if itmsURL.path == '/album': # Apple Music
+            action = 'lookup'
+            query = dict(id=query['i'][0])
+        elif itmsURL.path == '/link': # usually iTunes Store
+            if not 'pn' in query: # may be n= station name or "Contacting Store"
+                return
+            action = 'search'
+            query = dict(media='music', entity='album', limit='1',
+                         term='%s %s' % (query['an'][0], query['pn'][0]))
+            # XXX search through albums instead?
+    except Exception, e:
+        print >> sys.stderr, 'Parsing itms URL', itmsURL, 'failed:', e
+        return
+
+    url = 'http://itunes.apple.com/%s?%s' % (action, urllib.urlencode(query))
+    try:
+        response, content = http.request(url)
+        if not response['content-type'].startswith('text/javascript'):
+            print >> sys.stderr, 'Request for iTunes JSON from', url, 'failed:',
+            print >> sys.stderr, response
+            return
+    except Exception, e:
+        print >> sys.stderr, 'Request for iTunes JSON from', url, 'failed:', e
+        return
+
+    try:
+        artworkURL = json.loads(content)['results'][0]['artworkUrl100']
+        artworkURL = artworkURL.replace('100x100', '400x400')
+    except Exception, e:
+        print >> sys.stderr, 'Parsing JSON from', url, 'failed:', e
+        return
+
+    return imageAtURL(artworkURL)
 
 def notifyTrackInfo(name, album=None, artist=None, rating=0, artwork=False,
                     streamTitle=None, streamURL=None, playing=True):
@@ -228,6 +269,9 @@ class StreamVision(NSApplication):
     hotKeysActive = {}
     hotKeysSuspended = []
 
+    # iTunes exposes Apple Music information through notifications only
+    iTunesLastTrackInfo = [None]
+
     def playerInfoChanged(self, playerInfo):
         infoDict = dict(playerInfo.userInfo())
         trackName = infoDict.get('Name', '')
@@ -241,15 +285,15 @@ class StreamVision(NSApplication):
                             streamURL=url)
             return
         artworkCount = int(infoDict.get('Artwork Count', 0))
-        # XXX When starting iTunes Radio station playback, we get 2 notifications,
-        # neither of which mention the track: the first has the station's artwork,
-        # the second doesn't.  On the 2nd notification, wait 10 seconds and try again.
-        # By then, we should have artwork.
-        if not infoDict.has_key('Total Time') and artworkCount == 0:
-            self.performSelector_withObject_afterDelay_(self.displayTrackInfo, None, 10)
-            return
-        notifyTrackInfo(trackName, infoDict.get('Album'), infoDict.get('Artist'),
-                        infoDict.get('Rating', 0), artworkCount > 0)
+        if artworkCount == 0:
+            itms_URL = infoDict.get('Store URL')
+            artwork = itmsAlbumArtwork(itms_URL)
+        else:
+            artwork = True
+        self.iTunesLastTrackInfo = [trackName, infoDict.get('Album'),
+                                    infoDict.get('Artist'),
+                                    infoDict.get('Rating', 0), artwork]
+        notifyTrackInfo(*self.iTunesLastTrackInfo)
 
     def requestedDisplayTrackInfo(self):
         growlNotify('Requesting track information...')
@@ -291,18 +335,21 @@ class StreamVision(NSApplication):
             notifyTrackInfo(trackName, playing=False)
             return
         if trackClass == k.URL_track:
+            # either an Internet radio station or iTunes Radio
             url = iTunes.current_stream_URL()
-            if url == k.missing_value:
-                url = None
-            notifyTrackInfo(trackName, streamTitle=iTunes.current_stream_title(),
-                            streamURL=url)
-            return
+            if url != k.missing_value:
+                notifyTrackInfo(trackName,
+                                streamTitle=iTunes.current_stream_title(),
+                                streamURL=url)
+                return
         if trackClass == k.property:
-            notifyTrackInfo(None)
+            notifyTrackInfo(*self.iTunesLastTrackInfo)
             return
         # XXX iTunes doesn't let you get artwork for shared tracks (still?)
-        notifyTrackInfo(trackName, iTunes.current_track.album(), iTunes.current_track.artist(),
-                        iTunes.current_track.rating(), trackClass != k.shared_track)
+        notifyTrackInfo(trackName, iTunes.current_track.album(),
+                        iTunes.current_track.artist(),
+                        iTunes.current_track.rating(),
+                        trackClass != k.shared_track)
 
     def defaultOutputDeviceChanged(self):
         turnStereoOnOrOff()
