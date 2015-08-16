@@ -39,7 +39,7 @@ Ideally I should either include httplib2 as a submodule or a dependency (patches
 % python setup.py py2app
 ```
 
-Once you run it once and it displays a notification, you can configure it in the Growl app.  I have the Display Style set to “Music Video”, 40% opacity, normal size, duration 2 seconds.
+Once you run it once, you can configure the display style in the Growl app.  I have it set to “Music Video”, 40% opacity, normal size, duration 2 seconds.
 
 Running it in development
 -------------------------
