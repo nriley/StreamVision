@@ -17,7 +17,7 @@ Keyboard shortcuts
  - ⌘F8: go to currently playing Internet radio stream’s URL (or Radio Paradise song page), or bring Rdio/Hermes to the front if they’re playing
  - F9: play/pause
  - F11: previous track
- - F12: next track
+ - F12: next track (or skip track in Hermes)
  - ⇧F11: decrement star rating
  - ⇧F12: increment star rating
  - ⌘F11: decrease audio player volume
