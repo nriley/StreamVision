@@ -345,11 +345,10 @@ class StreamVision(NSApplication):
         if trackClass == k.property:
             notifyTrackInfo(*self.iTunesLastTrackInfo)
             return
-        # XXX iTunes doesn't let you get artwork for shared tracks (still?)
         notifyTrackInfo(trackName, iTunes.current_track.album(),
                         iTunes.current_track.artist(),
                         iTunes.current_track.rating(),
-                        trackClass != k.shared_track)
+                        True)
 
     def defaultOutputDeviceChanged(self):
         turnStereoOnOrOff()
