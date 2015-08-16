@@ -146,7 +146,7 @@ def turnStereoOnOrOff():
         if HAVE_XTENSION and XTensionApp().status('Stereo'):
             XTensionApp().turnoff('Stereo')
         return
-    if not XTensionApp().status('Stereo'):
+    if HAVE_XTENSION and not XTensionApp().status('Stereo'):
         XTensionApp().turnon('Stereo')
     usingStereo = True
     needsStereoPowerOn = False
@@ -156,7 +156,7 @@ def turnStereoOff():
     usingStereo = False
     if default_output_device_is_airplay() or not mayUseStereo():
         return
-    if not needsStereoPowerOn and XTensionApp().status('Stereo'):
+    if not needsStereoPowerOn and HAVE_XTENSION and XTensionApp().status('Stereo'):
         XTensionApp().turnoff('Stereo')
     needsStereoPowerOn = True
 
