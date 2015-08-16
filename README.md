@@ -4,16 +4,18 @@ StreamVision
 I use and maintain this, but it's unlikely to be useful as is to
 others.
 
-What is it?
------------
-Displays what you're playing in your audio player and lets you control the audio player from the keyboard.  It includes special support for the Radio Paradise stream.  There's also some code in there that turns my stereo on and off with AirPlay, but that should only try to do anything if you have XTension installed.
+What does it do?
+----------------
+StreamVIsion displays what’s playing in your audio player and lets you control the audio player from the keyboard.  It works with iTunes, the Rdio desktop app and the Hermes Pandora client.  It includes special support for the Radio Paradise stream.
 
-If nothing else, I've had to update it countless times for changes to iTunes and its scripting interface.
+There's also some code in there that turns my stereo on and off with AirPlay, but that should only try to do anything if you have XTension installed.
+
+If nothing else, it can provide a reference on how to get album artwork and track information out of iTunes.
 
 Commands
 --------
  - F8: display track info
- - ⌘F8: go to currently playing Internet radio stream’s URL (or Radio Paradise song page)
+ - ⌘F8: go to currently playing Internet radio stream’s URL (or Radio Paradise song page), or bring Rdio/Hermes to the front if they’re playing
  - F9: play/pause
  - F11: previous track
  - F12: next track
