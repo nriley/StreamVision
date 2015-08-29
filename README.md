@@ -14,7 +14,7 @@ If nothing else, it can provide a reference on how to get album artwork and trac
 Keyboard shortcuts
 ------------------
  - F8: display track info
- - ⌘F8: go to currently playing Internet radio stream’s URL (or Radio Paradise song page), or bring Rdio/Hermes to the front if they’re playing
+ - ⌘F8: go to currently playing Internet radio stream’s URL (or Radio Paradise song page), show current song in iTunes, or bring Rdio/Hermes to the front if they’re playing
  - F9: play/pause
  - F11: previous track
  - F12: next track (or skip track in Hermes)
