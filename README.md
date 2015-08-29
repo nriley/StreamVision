@@ -5,9 +5,9 @@ Short version: I use and maintain this, but it's unlikely to be useful as is to 
 
 What does it do?
 ----------------
-StreamVision displays what’s playing in your audio player and lets you control the audio player from the keyboard.  It works with iTunes, the Rdio desktop app and the Hermes Pandora client.  It includes special support for the Radio Paradise stream.
+StreamVision displays what’s playing in your audio player and lets you control the audio player from the keyboard.  It works with iTunes, the [Rdio desktop app](http://help.rdio.com/customer/portal/articles/59055-rdio-for-mac-and-windows-faq) and the [Hermes](http://hermesapp.org) Pandora client.  It includes special support for the [Radio Paradise](http://www.radioparadise.com/) stream.
 
-There's also some code in there that turns my stereo on and off with AirPlay, but that should only try to do anything if you have XTension installed.
+There's also some code in there that turns my stereo on and off with AirPlay, but that should only try to do anything if you have [XTension](http://www.machomeautomation.com/) installed.
 
 If nothing else, it can provide a reference on how to get album artwork and track information out of iTunes.
 
@@ -31,7 +31,7 @@ Requirements
 
 Building it
 -----------
-Ideally I should either include httplib2 as a submodule or a dependency (patches welcome), but for the moment...
+Ideally I should either include [httplib2](https://github.com/jcgregorio/httplib2) as a submodule or a dependency (patches welcome), but for the moment...
 ```shell
 % cd StreamVision
 % git clone https://github.com/jcgregorio/httplib2 httplib2-src
@@ -49,4 +49,4 @@ Running it in development
 ```
 Unfortunately `^C` doesn't work to stop it; you either have to use `^\` (and deal with the crash report) or kill it from elsewhere.
 
-`py2app -A` uses aliases, so you can modify StreamVision.py and only have to rerun it without rebuilding.
+`py2app -A` uses aliases, so you can modify `StreamVision.py` and test your changes without rebuilding.
