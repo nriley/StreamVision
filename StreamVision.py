@@ -376,7 +376,12 @@ class StreamVision(NSApplication):
                     growlNotify('Looking up Radio Paradise song...')
                     url = radioParadiseURL()
                 NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
-                return
+            else:
+                # XXX Activate first or sometimes iTunes doesn't
+                # actually highlight the currently playing track,
+                # despite revealing it (iTunes 12.2.2)
+                iTunes.activate()
+                iTunes.current_track.reveal()
         NSBeep()
 
     def registerHotKey(self, func, keyCode, mods=0):
