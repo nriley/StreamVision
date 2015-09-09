@@ -362,7 +362,7 @@ class StreamVision(NSApplication):
         turnStereoOnOrOff()
         self.displayTrackInfo()
 
-    def goToSite(self):
+    def showTrack(self):
         for playerPlaying in hermesPlaying(), rdioPlaying():
             if playerPlaying:
                 playerPlaying.activate()
@@ -497,7 +497,7 @@ class StreamVision(NSApplication):
         self.imagePath = os.path.join(cache, 'image')
 
         self.registerHotKey(self.requestedDisplayTrackInfo, 100) # F8
-        self.registerHotKey(self.goToSite, 100, cmdKey) # cmd-F8
+        self.registerHotKey(self.showTrack, 100, cmdKey) # cmd-F8
         self.registerHotKey(self.playPause, 101) # F9
         self.registerHotKey(self.previousTrack, 103) # F11
         self.registerHotKey(self.nextTrack, 111) # F12
