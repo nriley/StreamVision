@@ -94,7 +94,7 @@ def cleanStreamTrackName(name):
 
 def HermesApp(): return app(id='com.alexcrichton.Hermes')
 def iTunesApp(): return app(id='com.apple.iTunes')
-def RdioApp(): return app(id='com.rdio.desktop')
+def SpotifyApp(): return app(id='com.spotify.client')
 def XTensionApp(): return app(creator='SHEx')
 
 HAVE_XTENSION = False
@@ -112,15 +112,15 @@ def hermesPlaying():
     if Hermes.isrunning() and Hermes.playback_state() == k.playing:
         return Hermes
 
-def rdioPlaying():
-    Rdio = RdioApp()
-    if Rdio.isrunning() and Rdio.player_state() == k.playing:
-        return Rdio
+def spotifyPlaying():
+    Spotify = SpotifyApp()
+    if Spotify.isrunning() and Spotify.player_state() == k.playing:
+        return Spotify
 
 def mayUseStereo():
     if not HAVE_XTENSION:
         return False
-    if hermesPlaying() or rdioPlaying():
+    if hermesPlaying() or spotifyPlaying():
         return False
     try:
         # A bit better in iTunes 11.0.3, but can't do this via an Apple
@@ -160,8 +160,9 @@ def turnStereoOff():
         XTensionApp().turnoff('Stereo')
     needsStereoPowerOn = True
 
-def imageAtURL(url):
-    if url and url.endswith('.jpg'):
+def imageAtURL(url, force=False):
+    # Spotify image URLs look like http://images.spotify.com/image/<hex>
+    if url and (force or url.endswith('.jpg')):
         try:
             response, content = http.request(url)
         except Exception, e:
@@ -295,13 +296,13 @@ class StreamVision(NSApplication):
                                     infoDict.get('Rating', 0), artwork]
         notifyTrackInfo(*self.iTunesLastTrackInfo)
 
-    def rdioPlayStateChanged(self):
-        Rdio = rdioPlaying()
-        if Rdio:
+    def spotifyPlaybackStateChanged(self):
+        Spotify = spotifyPlaying()
+        if Spotify:
             self.displayTrackInfo()
         else:
-            growlNotify('Rdio is not playing.',
-                        icon_of_application=RdioApp().AS_appdata.identifier)
+            growlNotify('Spotify is not playing.',
+                        icon_of_application=SpotifyApp().AS_appdata.identifier)
 
     def requestedDisplayTrackInfo(self):
         growlNotify('Requesting track information...')
@@ -316,12 +317,14 @@ class StreamVision(NSApplication):
                             imageAtURL(infoDict[k.artwork_URL]))
             return
 
-        Rdio = rdioPlaying()
-        if Rdio:
-            infoDict = Rdio.current_track.properties()
-            notifyTrackInfo(infoDict[k.name], infoDict[k.album],
-                            infoDict[k.artist],
-                            artwork=infoDict[k.artwork].data)
+        Spotify = spotifyPlaying()
+        if Spotify:
+            # XXX this fails; either use the notification or lots of events
+            # infoDict = Spotify.current_track.properties()
+            track = Spotify.current_track
+            notifyTrackInfo(track.name(), track.album(),
+                            track.artist(),
+                            artwork=imageAtURL(track.artwork_url(), force=True))
             return
 
         iTunes = iTunesApp()
@@ -363,7 +366,7 @@ class StreamVision(NSApplication):
         self.displayTrackInfo()
 
     def showTrack(self):
-        for playerPlaying in hermesPlaying(), rdioPlaying():
+        for playerPlaying in hermesPlaying(), spotifyPlaying():
             if playerPlaying:
                 playerPlaying.activate()
                 return
@@ -432,7 +435,7 @@ class StreamVision(NSApplication):
             else: Hermes.decrease_volume()
             return
 
-        for player in rdioPlaying(), iTunesApp():
+        for player in spotifyPlaying(), iTunesApp():
             if player is None:
                 continue
             volume = player.sound_volume() + increment
@@ -447,8 +450,8 @@ class StreamVision(NSApplication):
     def playPause(self, useStereo=True):
         global needsStereoPowerOn
 
-        # if Hermes or Rdio is open, assume we're using it
-        for player in HermesApp(), RdioApp():
+        # if Hermes or Spotify is open, assume we're using it
+        for player in HermesApp(), SpotifyApp():
             if player.isrunning():
                 player.playpause()
                 return
@@ -470,9 +473,9 @@ class StreamVision(NSApplication):
             turnStereoOff()
 
     def nextTrack(self):
-        Rdio = rdioPlaying()
-        if Rdio:
-            Rdio.next_track()
+        Spotify = spotifyPlaying()
+        if Spotify:
+            Spotify.next_track()
             return
 
         Hermes = hermesPlaying()
@@ -483,9 +486,9 @@ class StreamVision(NSApplication):
         iTunesApp().next_track()
 
     def previousTrack(self):
-        Rdio = rdioPlaying()
-        if Rdio:
-            Rdio.previous_track()
+        Spotify = spotifyPlaying()
+        if Spotify:
+            Spotify.previous_track()
             return
 
         iTunesApp().previous_track()
@@ -516,8 +519,7 @@ class StreamVision(NSApplication):
 
         distributedNotificationCenter = NSDistributedNotificationCenter.defaultCenter()
         distributedNotificationCenter.addObserver_selector_name_object_(self, self.playerInfoChanged, 'com.apple.iTunes.playerInfo', None)
-        # if you use this, disable Rdio's own "Now Playing" Growl notification
-        distributedNotificationCenter.addObserver_selector_name_object_(self, self.rdioPlayStateChanged, 'com.rdio.desktop.playStateChanged', None)
+        distributedNotificationCenter.addObserver_selector_name_object_(self, self.spotifyPlaybackStateChanged, 'com.spotify.client.PlaybackStateChanged', None)
         distributedNotificationCenter.addObserver_selector_name_object_(self, self.terminate_, 'com.apple.logoutContinued', None)
 
         set_default_output_device_changed_callback(

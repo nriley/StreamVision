@@ -5,7 +5,7 @@ Short version: I use and maintain this, but it's unlikely to be useful as is to 
 
 What does it do?
 ----------------
-StreamVision displays what’s playing in your audio player and lets you control the audio player from the keyboard.  It works with iTunes, the [Rdio desktop app](http://help.rdio.com/customer/portal/articles/59055-rdio-for-mac-and-windows-faq) and the [Hermes](http://hermesapp.org) Pandora client.  It includes special support for the [Radio Paradise](http://www.radioparadise.com/) stream.
+StreamVision displays what’s playing in your audio player and lets you control the audio player from the keyboard.  It works with iTunes, the [Spotify desktop app](http://spotify.com/us/download/mac/) and the [Hermes](http://hermesapp.org) Pandora client.  It includes special support for the [Radio Paradise](http://www.radioparadise.com/) stream.
 
 There's also some code in there that turns my stereo on and off with AirPlay, but that should only try to do anything if you have [XTension](http://www.machomeautomation.com/) installed.
 
@@ -14,7 +14,7 @@ If nothing else, it can provide a reference on how to get album artwork and trac
 Keyboard shortcuts
 ------------------
  - F8: display track info
- - ⌘F8: go to currently playing Internet radio stream’s URL (or Radio Paradise song page), show current song in iTunes, or bring Rdio/Hermes to the front if they’re playing
+ - ⌘F8: go to currently playing Internet radio stream’s URL (or Radio Paradise song page), show current song in iTunes, or bring Hermes/Spotify to the front if they’re playing
  - F9: play/pause
  - F11: previous track
  - F12: next track (or skip track in Hermes)
@@ -27,7 +27,7 @@ Requirements
 ------------
  - OS X (currently tested on 10.10.5)
  - Growl (OS X’s notification system is insufficiently flexible for what I’m doing)
- - iTunes, Hermes or Rdio
+ - iTunes, Hermes and/or Spotify
 
 Building it
 -----------
