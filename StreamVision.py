@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from aem.ae import newdesc
+from aem.findapp import ApplicationNotFoundError
 from appscript import app, k, its, CommandError
 from AppKit import (NSApplication, NSApplicationDefined, NSBeep, NSImage,
                     NSSystemDefined, NSURL, NSWorkspace,
@@ -92,9 +93,21 @@ def cleanStreamTrackName(name):
         name = name[0]
     return name
 
-def HermesApp(): return app(id='com.alexcrichton.Hermes')
+class UninstalledApp(object):
+    __slots__ = ('kw',)
+    def __init__(self, **kw): self.kw = kw
+    def isrunning(self): return False
+    def __repr__(self): return '<UninstalledApp: ' + ', '.join('%s=%r' % (k, v) for k, v in self.kw.iteritems())
+
+def appIfInstalled(**kw):
+    try:
+        return app(**kw)
+    except ApplicationNotFoundError:
+        return UninstalledApp(**kw)
+        
+def HermesApp(): return appIfInstalled(id='com.alexcrichton.Hermes')
 def iTunesApp(): return app(id='com.apple.iTunes')
-def SpotifyApp(): return app(id='com.spotify.client')
+def SpotifyApp(): return appIfInstalled(id='com.spotify.client')
 def XTensionApp(): return app(creator='SHEx')
 
 HAVE_XTENSION = False
