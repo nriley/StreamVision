@@ -5,11 +5,11 @@ Short version: I use and maintain this, but it's unlikely to be useful as is to 
 
 What does it do?
 ----------------
-StreamVision displays what’s playing in your audio player and lets you control the audio player from the keyboard.  It works with iTunes, the [Spotify desktop app](http://spotify.com/us/download/mac/) and the [Hermes](http://hermesapp.org) Pandora client.  It includes special support for the [Radio Paradise](http://www.radioparadise.com/) stream.
+StreamVision displays what’s playing in your audio player and lets you control the audio player from the keyboard.  It works with iTunes, the [Spotify desktop app](http://spotify.com/us/download/mac/) and the [Hermes](http://hermesapp.org/) Pandora client.  It includes special support for the [Radio Paradise](http://www.radioparadise.com/) stream.
 
 There's also some code in there that turns my stereo on and off with AirPlay, but that should only try to do anything if you have [XTension](http://www.machomeautomation.com/) installed.
 
-If nothing else, it can provide a reference on how to get album artwork and track information out of iTunes.
+If nothing else, it provides a reference for obtaining album artwork and track information from iTunes.
 
 Keyboard shortcuts
 ------------------
@@ -25,27 +25,53 @@ Keyboard shortcuts
 
 Requirements
 ------------
- - OS X (currently tested on 10.10.5)
+ - OS X (currently tested on 10.10.5 and 10.11.5)
  - Growl (OS X’s notification system is insufficiently flexible for what I’m doing)
  - iTunes, Hermes and/or Spotify
 
 Building it
 -----------
-Ideally I should either include [httplib2](https://github.com/jcgregorio/httplib2) as a submodule or a dependency (patches welcome), but for the moment...
+StreamVision is written in Python 2 with a couple of small C extensions.  I use it with OS X's built-in Python, and have not tested it with other Python installations (which may not contain all the packages upon which StreamVision relies).
+
+I'd recommend you create a [virtualenv](https://virtualenv.pypa.io/) to isolate StreamVision's build from your Python installation.
+
 ```shell
 % cd StreamVision
-% git clone https://github.com/jcgregorio/httplib2 httplib2-src
-% ln -s httplib2-src/python2/httplib2
-% python setup.py py2app
+% virtualenv . --system-site-packages
+% source bin/activate
 ```
 
-Once you run it once, you can configure the display style in the Growl app.  I have it set to “Music Video”, 40% opacity, normal size, duration 2 seconds.
+StreamVision uses [py2app](https://pythonhosted.org/py2app/).  In OS X 10.11, the bundled version of py2app does not work because of a conflict with [System Integrity Protection](https://developer.apple.com/library/mac/documentation/Security/Conceptual/System_Integrity_Protection_Guide/Introduction/Introduction.html) (SIP, also known as "rootless").  You can disable SIP while building StreamVision, or install your own version of py2app which will not have this restriction.  Instructions for both options are in [this Stack Overflow question](http://stackoverflow.com/questions/33197412/py2app-operation-not-permitted).
+
+You will also need to install [`py-appscript`](http://appscript.sourceforge.net/py-appscript/install.html):
+
+```shell
+(StreamVision)% pip install appscript
+```
+
+Ideally I should either include [httplib2](https://github.com/jcgregorio/httplib2) as a submodule or a dependency (patches welcome), but for the moment...
+
+```shell
+% git clone https://github.com/jcgregorio/httplib2 httplib2-src
+% ln -s httplib2-src/python2/httplib2
+```
+
+Then you're ready to build:
+
+```shell
+% source bin/activate
+(StreamVision)% python setup.py py2app
+```
+
+The application will be built in the `dist` folder.  After you run StreamVision once, you can configure its display style in the Growl app.  I have it set to “Music Video”, 85% opacity, normal size, duration 2 seconds.
+
+If you run into errors with the above (likely on 10.11 if you've installed your own py2app), you likely have encountered a twisty mess of py2app code rot as its dependencies have been updated and it hasn't kept pace.  Building with `-A` (as below) is a workaround that won't let you distribute StreamVision, but at least you can run it for youself.
 
 Running it in development
 -------------------------
 ```shell
-% python setup.py py2app -A
-% arch -i386 dist/StreamVision.app/Contents/MacOS/StreamVision
+(StreamVision)% python setup.py py2app -A
+(StreamVision)% arch -i386 dist/StreamVision.app/Contents/MacOS/StreamVision
 ```
 Unfortunately `^C` doesn't work to stop it; you either have to use `^\` (and deal with the crash report) or kill it from elsewhere.
 
