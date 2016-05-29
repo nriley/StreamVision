@@ -99,12 +99,15 @@ class UninstalledApp(object):
     def isrunning(self): return False
     def __repr__(self): return '<UninstalledApp: ' + ', '.join('%s=%r' % (k, v) for k, v in self.kw.iteritems())
 
+# This gets confused if you have more than one copy of the app
+# installed.  Avoid that.
+
 def appIfInstalled(**kw):
     try:
         return app(**kw)
     except ApplicationNotFoundError:
         return UninstalledApp(**kw)
-        
+
 def HermesApp(): return appIfInstalled(id='com.alexcrichton.Hermes')
 def iTunesApp(): return app(id='com.apple.iTunes')
 def SpotifyApp(): return appIfInstalled(id='com.spotify.client')
