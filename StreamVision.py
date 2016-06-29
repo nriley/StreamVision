@@ -7,7 +7,8 @@ from appscript import app, k, its, CommandError
 from AppKit import (NSApplication, NSApplicationDefined, NSBeep, NSImage,
                     NSSystemDefined, NSURL, NSWorkspace,
                     NSWorkspaceApplicationKey,
-                    NSWorkspaceDidActivateApplicationNotification)
+                    NSWorkspaceDidActivateApplicationNotification,
+                    NSWorkspaceScreensDidSleepNotification)
 from Foundation import (NSDistributedNotificationCenter,
                         NSSearchPathForDirectoriesInDomains,
                         NSCachesDirectory, NSUserDomainMask)
@@ -432,6 +433,20 @@ class StreamVision(NSApplication):
         else:
             self.resumeHotKeys()
 
+    def screensDidSleep(self, notification):
+        # if we're AirPlaying audio, we probably can hear it and will notice
+        if default_output_device_is_airplay():
+            return
+
+        # pause everything (prevents continued playback if you walk away without pausing explicitly)
+        iTunes = iTunesApp()
+        if iTunes.player_state() == k.playing:
+            iTunes.pause()
+
+        for player in HermesApp(), SpotifyApp():
+            if player.isrunning():
+                player.pause()
+
     def incrementRatingBy(self, increment):
         iTunes = iTunesApp()
         rating = iTunes.current_track.rating()
@@ -537,6 +552,7 @@ class StreamVision(NSApplication):
 
         workspaceNotificationCenter = NSWorkspace.sharedWorkspace().notificationCenter()
         workspaceNotificationCenter.addObserver_selector_name_object_(self, self.applicationDidActivate, NSWorkspaceDidActivateApplicationNotification, None)
+        workspaceNotificationCenter.addObserver_selector_name_object_(self, self.screensDidSleep, NSWorkspaceScreensDidSleepNotification, None)
 
         distributedNotificationCenter = NSDistributedNotificationCenter.defaultCenter()
         distributedNotificationCenter.addObserver_selector_name_object_(self, self.playerInfoChanged, 'com.apple.iTunes.playerInfo', None)
