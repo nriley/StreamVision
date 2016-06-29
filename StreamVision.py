@@ -466,14 +466,19 @@ class StreamVision(NSApplication):
     def playPause(self, useStereo=True):
         global needsStereoPowerOn
 
+        # first, pause iTunes if it's playing - avoids letting multiple players play simultaneously
+        iTunes = iTunesApp()
+        was_playing = (iTunes.player_state() == k.playing)
+        if was_playing:
+            iTunes.pause()
+            return
+
         # if Hermes or Spotify is open, assume we're using it
         for player in HermesApp(), SpotifyApp():
             if player.isrunning():
                 player.playpause()
                 return
 
-        iTunes = iTunesApp()
-        was_playing = (iTunes.player_state() == k.playing)
         if not useStereo:
             needsStereoPowerOn = False
         iTunes.playpause()
