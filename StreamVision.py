@@ -20,6 +20,7 @@ from AudioDevice import (default_output_device_is_airplay,
 import httplib2
 import json
 import os
+import osax
 import scrape
 import sys
 import urllib
@@ -281,6 +282,16 @@ class OneFileCache(object):
             self.key = None
             os.remove(self.cache)
 
+OSAX = osax.OSAX()
+
+try:
+    import applemusic
+    AppleMusic = applemusic.AppleMusic()
+except:
+    import traceback
+    print >> sys.stderr, 'Failed to set up Apple Music'
+    traceback.print_exc()
+
 class StreamVision(NSApplication):
 
     hotKeyActions = {}
@@ -403,6 +414,20 @@ class StreamVision(NSApplication):
                 iTunes.activate()
                 iTunes.current_track.reveal()
         NSBeep()
+
+    def showTrackInAppleMusic(self):
+        # XXX keep track of search terms in advance
+        iTunes = iTunesApp()
+        import pdb; pdb.Pdb().set_trace()
+        if iTunes.player_state() == k.playing:
+            url = iTunes.current_stream_URL()
+            if url != k.missing_value:
+                songs = AppleMusic.search_for_songs(iTunes.current_stream_title())
+                song = OSAX.choose_from_list(songs.keys())
+                if not song:
+                    return
+                song_url = songs[song[0]]
+                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(song_url))
 
     def registerHotKey(self, func, keyCode, mods=0):
         hotKeyRef = RegisterEventHotKey(keyCode, mods, (0, 0),
@@ -542,6 +567,7 @@ class StreamVision(NSApplication):
 
         self.registerHotKey(self.requestedDisplayTrackInfo, 100) # F8
         self.registerHotKey(self.showTrack, 100, cmdKey) # cmd-F8
+        self.registerHotKey(self.showTrackInAppleMusic, 100, shiftKey) # shift-F8
         self.registerHotKey(self.playPause, 101) # F9
         self.registerHotKey(self.previousTrack, 103) # F11
         self.registerHotKey(self.nextTrack, 111) # F12
