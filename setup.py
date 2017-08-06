@@ -23,5 +23,6 @@ setup(
                            sources=['AudioDevicemodule.c'],
                            extra_link_args=['-framework', 'AudioToolbox'])],
     data_files=["English.lproj"],
-    options=dict(py2app=dict(plist=plist)),
+    options=dict(py2app=dict(plist=plist,
+                             resources=['AuthKey_8937YX2XGP.p8'])),
 )
