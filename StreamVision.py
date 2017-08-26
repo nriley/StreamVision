@@ -237,11 +237,12 @@ def notifyTrackInfo(name, album=None, artist=None, rating=0, artwork=False,
         return
     turnStereoOnOrOff()
 
-    if streamURL:
+    if streamTitle:
         kw = {}
-        image = imageAtURL(streamURL)
-        if image:
-            kw['image'] = image
+        if streamURL:
+            image = imageAtURL(streamURL)
+            if image:
+                kw['image'] = image
         growlNotify(cleanStreamTitle(streamTitle),
                     cleanStreamTrackName(name), **kw)
         return
@@ -302,7 +303,7 @@ class StreamVision(NSApplication):
     hotKeysSuspended = []
 
     # iTunes exposes Apple Music information through notifications only
-    iTunesLastTrackInfo = [None]
+    iTunesLastTrackInfo = {}
 
     def playerInfoChanged(self, playerInfo):
         infoDict = dict(playerInfo.userInfo())
@@ -322,10 +323,32 @@ class StreamVision(NSApplication):
             artwork = itmsAlbumArtwork(itms_URL)
         else:
             artwork = True
-        self.iTunesLastTrackInfo = [trackName, infoDict.get('Album'),
-                                    infoDict.get('Artist'),
-                                    infoDict.get('Rating', 0), artwork]
-        notifyTrackInfo(*self.iTunesLastTrackInfo)
+
+        # For live or recorded Apple Music radio (e.g. Beats 1), 'Name' is just
+        # the station name.  For other stations, it is the song name as expected.
+        # If display line 0 and name differ, then use display line 0/1 instead.
+        line0 = infoDict.get('Display Line 0')
+        if line0 and trackName != line0:
+            self.iTunesLastTrackInfo = dict(name=line0)
+            # Line 1 format is typically <artist> \u2014 <album> \u2014 <station>
+            line1 = infoDict.get('Display Line 1')
+            if line1:
+                line1_split = line1.split(u' \u2014 ', 2)
+                if len(line1_split) != 3: # not perfect, but better than nothing
+                    self.iTunesLastTrackInfo.update(album=line1)
+                else:
+                    self.iTunesLastTrackInfo.update(
+                        artist=line1_split[0],
+                        album=line1_split[1])
+        else:
+            self.iTunesLastTrackInfo = dict(
+                name=trackName, album=infoDict.get('Album'),
+                artist=infoDict.get('Artist'))
+        self.iTunesLastTrackInfo.update(
+            rating=infoDict.get('Rating',
+                                infoDict.get('Album Rating', 0)),
+            artwork=artwork)
+        notifyTrackInfo(**self.iTunesLastTrackInfo)
 
     def spotifyPlaybackStateChanged(self):
         Spotify = spotifyPlaying()
@@ -377,15 +400,18 @@ class StreamVision(NSApplication):
             notifyTrackInfo(trackName, playing=False)
             return
         if trackClass == k.URL_track:
-            # either an Internet radio station or iTunes Radio
             url = iTunes.current_stream_URL()
-            if url != k.missing_value:
+            streamTitle = iTunes.current_stream_title()
+            if streamTitle or not self.iTunesLastTrackInfo:
                 notifyTrackInfo(trackName,
                                 streamTitle=iTunes.current_stream_title(),
-                                streamURL=url)
-                return
+                                streamURL=url if url != k.missing_value else None)
+                self.iTunesLastTrackInfo = {}
+            else:
+                notifyTrackInfo(**self.iTunesLastTrackInfo)
+            return
         if trackClass == k.property:
-            notifyTrackInfo(*self.iTunesLastTrackInfo)
+            notifyTrackInfo(**self.iTunesLastTrackInfo)
             return
         notifyTrackInfo(trackName, iTunes.current_track.album(),
                         iTunes.current_track.artist(),
