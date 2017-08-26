@@ -189,6 +189,9 @@ def imageAtURL(url, force=False):
             if response['content-type'].startswith('image/'):
                 return content
 
+def openURL(url):
+    NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
+
 def itmsAlbumArtwork(itmsURL):
     try:
         itmsURL = urlparse.urlparse(itmsURL)
@@ -406,7 +409,7 @@ class StreamVision(NSApplication):
                 if 'radioparadise.com' in url and 'review' not in url:
                     growlNotify('Looking up Radio Paradise song...')
                     url = radioParadiseURL()
-                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(url))
+                openURL(url)
             else:
                 # XXX Activate first or sometimes iTunes doesn't
                 # actually highlight the currently playing track,
@@ -426,8 +429,8 @@ class StreamVision(NSApplication):
                 song = OSAX.choose_from_list(songs.keys())
                 if not song:
                     return
-                song_url = songs[song[0]]
-                NSWorkspace.sharedWorkspace().openURL_(NSURL.URLWithString_(song_url))
+                songURL = songs[song[0]]
+                openURL(songURL)
 
     def registerHotKey(self, func, keyCode, mods=0):
         hotKeyRef = RegisterEventHotKey(keyCode, mods, (0, 0),
