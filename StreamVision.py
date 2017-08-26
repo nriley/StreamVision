@@ -345,8 +345,7 @@ class StreamVision(NSApplication):
                 name=trackName, album=infoDict.get('Album'),
                 artist=infoDict.get('Artist'))
         self.iTunesLastTrackInfo.update(
-            rating=infoDict.get('Rating',
-                                infoDict.get('Album Rating', 0)),
+            rating=infoDict.get('Rating', 0),
             artwork=artwork)
         notifyTrackInfo(**self.iTunesLastTrackInfo)
 
