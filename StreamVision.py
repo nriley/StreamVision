@@ -421,7 +421,6 @@ class StreamVision(NSApplication):
     def showTrackInAppleMusic(self):
         # XXX keep track of search terms in advance
         iTunes = iTunesApp()
-        import pdb; pdb.Pdb().set_trace()
         if iTunes.player_state() == k.playing:
             url = iTunes.current_stream_URL()
             if url != k.missing_value:
