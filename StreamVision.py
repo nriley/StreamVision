@@ -312,10 +312,10 @@ class StreamVision(NSApplication):
         if playerState != 'Playing':
             notifyTrackInfo(trackName, playing=False)
             return
-        url = infoDict.get('Stream URL')
-        if url:
+        streamTitle = infoDict.get('Stream Title')
+        if streamTitle:
             notifyTrackInfo(trackName, streamTitle=infoDict.get('Stream Title'),
-                            streamURL=url)
+                            streamURL=infoDict.get('Stream URL'))
             return
         artworkCount = int(infoDict.get('Artwork Count', 0))
         if artworkCount == 0:
