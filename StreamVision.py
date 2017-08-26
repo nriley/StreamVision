@@ -448,10 +448,23 @@ class StreamVision(NSApplication):
         # XXX keep track of search terms in advance
         iTunes = iTunesApp()
         if iTunes.player_state() == k.playing:
-            url = iTunes.current_stream_URL()
-            if url != k.missing_value:
-                songs = AppleMusic.search_for_songs(iTunes.current_stream_title())
-                song = OSAX.choose_from_list(songs.keys())
+            streamTitle = iTunes.current_stream_title()
+            if streamTitle != k.missing_value:
+                growlNotify('Looking up song in Apple Music...')
+                songs = AppleMusic.search_for_songs(streamTitle)
+                if not songs:
+                    growlNotify('No matching songs in Apple Music.')
+                    return
+                if len(songs) == 1:
+                    openURL(songs.values()[0])
+                    return
+                NSApp = NSApplication.sharedApplication()
+                NSApp.activateIgnoringOtherApps_(True)
+                song = OSAX.choose_from_list(
+                    songs.keys(),
+                    OK_button_name='Open',
+                    with_prompt=u'Select a song matching “%s”:' % streamTitle,
+                    with_title='StreamVision: Apple Music')
                 if not song:
                     return
                 songURL = songs[song[0]]
