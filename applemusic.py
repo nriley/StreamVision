@@ -38,17 +38,12 @@ class AppleMusic(object):
 
         try:
             results = content['results']
-            album_names = {}
-            for album in results['albums']['data']:
-                attr = album['attributes']
-                album_names[int(album['id'])] = attr['name']
             songs = {}
             for song in results['songs']['data']:
                 attr = song['attributes']
                 artist_album = attr['artistName']
                 url = attr['url']
-                # XXX dependent on knowing the structure of URLs as .../album/id<album ID>?...
-                album_name = album_names.get(int(url[url.rindex('/id')+3:url.rindex('?')]))
+                album_name = attr.get('albumName')
                 if album_name:
                     artist_album = '%s - %s' % (artist_album, album_name)
                 songs['%s - %d %s (%s)' % (artist_album, attr['trackNumber'], attr['name'], attr['releaseDate'])] = url
