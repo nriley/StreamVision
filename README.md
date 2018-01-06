@@ -26,13 +26,13 @@ Keyboard shortcuts
 
 Requirements
 ------------
- - OS X (currently tested on 10.10.5 and 10.11.5 with py2app, and on 10.12.6 with PyInstaller)
- - Growl (OS X’s notification system is insufficiently flexible for what I’m doing)
+ - macOS (currently tested on 10.10.5 and 10.11.5 with py2app, and on 10.12.6 and 10.13.2 with PyInstaller)
+ - Growl (macOS’s notification system is insufficiently flexible for what I’m doing)
  - iTunes, Hermes and/or Spotify
 
 Building it
 -----------
-StreamVision is written in Python 2 with a couple of small C extensions.  I use it with OS X's built-in Python, and have not tested it with other Python installations (which may not contain all the packages upon which StreamVision relies).
+StreamVision is written in Python 2 with a couple of small C extensions.  I use it with macOS's built-in Python, and have not tested it with other Python installations (which may not contain all the packages upon which StreamVision relies).
 
 I'd recommend you create a [virtualenv](https://virtualenv.pypa.io/) to isolate StreamVision's build from your Python installation.
 
@@ -55,8 +55,8 @@ Ideally I should either include [httplib2](https://github.com/jcgregorio/httplib
 % ln -s httplib2-src/python2/httplib2
 ```
 
-Building with PyInstaller (10.12)
----------------------------------
+Building with PyInstaller (10.12+)
+----------------------------------
 Clone PyInstaller from Git, build an i386 (32-bit) bootloader and install PyInstaller:
 
 ```shell
