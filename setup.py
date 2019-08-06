@@ -10,19 +10,17 @@ plist = dict(
     CFBundleIdentifier='net.sabi.StreamVision',
     CFBundleName='StreamVision',
     NSPrincipalClass='StreamVision',
-    LSArchitecturePriority=['i386'],
     LSUIElement=1,
 )
 
 setup(
     app=["StreamVision.py"],
-    ext_modules=[Extension('HotKey',
-                           sources=['HotKeymodule.c'],
-                           extra_link_args=['-framework', 'Carbon']),
-                 Extension('AudioDevice',
+    ext_modules=[Extension('AudioDevice',
                            sources=['AudioDevicemodule.c'],
                            extra_link_args=['-framework', 'AudioToolbox'])],
     data_files=["English.lproj"],
-    options=dict(py2app=dict(plist=plist,
-                             resources=['AuthKey_8937YX2XGP.p8'])),
+    options=dict(py2app=dict(
+        plist=plist,
+        site_packages=True,
+        resources=['AuthKey_8937YX2XGP.p8'])),
 )

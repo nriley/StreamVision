@@ -26,13 +26,13 @@ Keyboard shortcuts
 
 Requirements
 ------------
- - macOS (currently tested on 10.10.5 and 10.11.5 with py2app, and on 10.12.6 and 10.13.2 with PyInstaller)
+ - macOS (currently tested on 10.14.6 with PyInstaller)
  - Growl (macOS’s notification system is insufficiently flexible for what I’m doing)
  - iTunes, Hermes and/or Spotify
 
 Building it
 -----------
-StreamVision is written in Python 2 with a couple of small C extensions.  I use it with macOS's built-in Python, and have not tested it with other Python installations (which may not contain all the packages upon which StreamVision relies).
+StreamVision is written in Python 2 with a small C extension.  I use it with macOS's built-in Python, and have not tested it with other Python installations (which may not contain all the packages upon which StreamVision relies).
 
 I'd recommend you create a [virtualenv](https://virtualenv.pypa.io/) to isolate StreamVision's build from your Python installation.
 
@@ -57,22 +57,16 @@ Ideally I should either include [httplib2](https://github.com/jcgregorio/httplib
 
 Building with PyInstaller (10.12+)
 ----------------------------------
-Clone PyInstaller from Git, build an i386 (32-bit) bootloader and install PyInstaller:
+Install PyInstaller:
 
 ```shell
-(StreamVision) % mkdir src
-(StreamVision) % cd src
-(StreamVision) % git clone https://github.com/pyinstaller/pyinstaller
-(StreamVision) % cd pyinstaller/bootloader
-(StreamVision) % arch -i386 python ./waf distclean all --target-arch=32bit
-(StreamVision) % cd ..
-(StreamVision) % arch -i386 pip install -e .
+(StreamVision) % pip install pyinstaller
 ```
 
 Then build the extension modules and StreamVision itself:
 ```shell
 (StreamVision) % python setup.py build
-(StreamVision) % arch -i386 pyinstaller StreamVision.spec
+(StreamVision) % pyinstaller StreamVision.spec
 ```
 The application should build as `dist/StreamVision.app`, though without Apple Music support.
 
@@ -80,12 +74,9 @@ After you run StreamVision once, you can configure its display style in the Grow
 
 If you really want Apple Music support
 --------------------------------------
-Install a current OpenSSL *including 32-bit support* (I use MacPorts — `sudo port install openssl +universal`).
-
-Install `cryptography` from Git linking against your built OpenSSL — with MacPorts, like this:
+Install `jwcrypto`:
 ```shell
-(StreamVision) % CPPFLAGS='-I/opt/local/include' LDFLAGS='-L/opt/local/lib' \
-                pip install git+https://github.com/pyca/cryptography#egg=cryptography
+(StreamVision) % pip install jwcrypto
 ```
 
 Get [a MusicKit private key](https://developer.apple.com/library/content/documentation/NetworkingInternetWeb/Conceptual/AppleMusicWebServicesReference/SetUpWebServices.html), put it in a file and update the filename in and `kid`/`iss` in `StreamVision.spec` and `applemusic.py`.
@@ -99,9 +90,9 @@ To test that your MusicKit private key is set up properly, use `applemusic.py` �
 
 Assuming everything works, rebuild with `pyinstaller` as above and you should have an Apple Music-enabled version of StreamVision.
 
-Building with py2app (10.10 or 10.11)
--------------------------------------
-StreamVision uses [py2app](https://pythonhosted.org/py2app/); unfortunately py2app has not kept pace with OS development.  In OS X 10.11, the bundled version of py2app does not work because of a conflict with [System Integrity Protection](https://developer.apple.com/library/mac/documentation/Security/Conceptual/System_Integrity_Protection_Guide/Introduction/Introduction.html) (SIP, also known as "rootless").  You can disable SIP while building StreamVision, or install your own version of py2app which will not have this restriction.  Instructions for both options are in [this Stack Overflow question](http://stackoverflow.com/questions/33197412/py2app-operation-not-permitted).
+Building with py2app
+--------------------
+StreamVision previously built with [py2app](https://pythonhosted.org/py2app/); this is no longer working in current macOS, and this build method is no longer tested.  In OS X 10.11, the bundled version of py2app does not work because of a conflict with [System Integrity Protection](https://developer.apple.com/library/mac/documentation/Security/Conceptual/System_Integrity_Protection_Guide/Introduction/Introduction.html) (SIP, also known as "rootless").  You can disable SIP while building StreamVision, or install your own version of py2app which will not have this restriction.  Instructions for both options are in [this Stack Overflow question](http://stackoverflow.com/questions/33197412/py2app-operation-not-permitted).
 
 Then you're ready to build:
 
@@ -118,7 +109,7 @@ Running it in development
 -------------------------
 ```shell
 (StreamVision) % python setup.py py2app -A
-(StreamVision) % arch -i386 dist/StreamVision.app/Contents/MacOS/StreamVision
+(StreamVision) % dist/StreamVision.app/Contents/MacOS/StreamVision
 ```
 Unfortunately `^C` doesn't work to stop it; you either have to use `^\` (and deal with the crash report) or kill it from elsewhere.
 

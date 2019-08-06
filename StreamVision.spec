@@ -5,8 +5,7 @@ block_cipher = None
 
 a = Analysis(['StreamVision.py'],
              pathex=['/Users/nicholas/Documents/Development/StreamVision'],
-             binaries=[('build/lib.macosx-10.12-intel-2.7/AudioDevice.so', '.'),
-                       ('build/lib.macosx-10.12-intel-2.7/HotKey.so', '.')],
+             binaries=[('build/lib.macosx-10.14-intel-2.7/AudioDevice.so', '.')],
              datas=[('AuthKey_8937YX2XGP.p8', '.')],
              hiddenimports=[],
              hookspath=[],
@@ -34,7 +33,6 @@ app = BUNDLE(exe,
                  CFBundleIdentifier='net.sabi.StreamVision',
                  CFBundleName='StreamVision',
                  NSPrincipalClass='StreamVision',
-                 LSArchitecturePriority=['i386'],
                  LSUIElement=1,
              )
             )

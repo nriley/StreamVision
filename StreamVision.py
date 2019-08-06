@@ -13,10 +13,11 @@ from Foundation import (NSDistributedNotificationCenter,
                         NSSearchPathForDirectoriesInDomains,
                         NSCachesDirectory, NSUserDomainMask)
 from PyObjCTools import AppHelper
-from Carbon.CarbonEvt import RegisterEventHotKey, GetApplicationEventTarget
 from Carbon.Events import cmdKey, shiftKey
 from AudioDevice import (default_output_device_is_airplay,
                          set_default_output_device_changed_callback)
+from HotKey import RegisterEventHotKey
+
 import httplib2
 import json
 import os
@@ -25,7 +26,6 @@ import scrape
 import sys
 import urllib
 import urlparse
-import HotKey
 
 GROWL_APP_NAME = 'StreamVision'
 NOTIFICATION_TRACK_INFO = 'iTunes Track Info'
@@ -470,15 +470,14 @@ class StreamVision(NSApplication):
                 openURL(songURL)
 
     def registerHotKey(self, func, keyCode, mods=0):
-        hotKeyRef = RegisterEventHotKey(keyCode, mods, (0, 0),
-                                        GetApplicationEventTarget(), 0)
+        hotKeyRef = RegisterEventHotKey(keyCode, mods)
         self.hotKeysActive[hotKeyRef] = (func, keyCode, mods)
-        self.hotKeyActions[HotKey.HotKeyAddress(hotKeyRef)] = func
+        self.hotKeyActions[hotKeyRef.address] = func
         return hotKeyRef
 
     def unregisterHotKey(self, hotKeyRef):
         del self.hotKeysActive[hotKeyRef]
-        del self.hotKeyActions[HotKey.HotKeyAddress(hotKeyRef)]
+        del self.hotKeyActions[hotKeyRef.address]
         hotKeyRef.UnregisterEventHotKey()
 
     def suspendHotKeys(self):
