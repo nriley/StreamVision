@@ -68,11 +68,8 @@ def growlNotify(title, description='', **kw):
 
 def radioParadiseURL():
     session = scrape.Session()
-    session.go('http://radioparadise.com/jq_playlist.php')
-    url = session.region.firsttag('a')['href']
-    if not url.startswith('http'):
-        url = 'http://www.radioparadise.com/rp2-' + url
-        return url
+    session.go('https://legacy.radioparadise.com/ajax_playlist_display.php')
+    return session.region.lasttag('a')['href']
 
 def cleanStreamTitle(title):
     if title == k.missing_value:
